@@ -1,0 +1,678 @@
+/* RESET SEMUA */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Warna tema latar belakang (bola + cahaya). Nilai default = Tampilan 1.
+   Diisi ulang otomatis oleh script.js sesuai activeBackgroundTheme di database.js */
+:root {
+    --ball1-inner: 96, 165, 250;
+    --ball1-mid: 124, 58, 237;
+    --ball1-outer: 76, 29, 149;
+    --ball2-inner: 129, 140, 248;
+    --ball2-mid: 109, 40, 217;
+    --ball2-outer: 67, 20, 140;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #050505; /* Hitam pekat */
+    padding: 25px 20px;
+    color: white;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* === MODAL POPUP PERTANYAAN PERFORMA === */
+.render-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(5, 5, 5, 0.85);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+.render-modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.render-modal-box {
+    position: relative;
+    background: #0d0d0d;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 28px;
+    padding: 35px 25px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+    transform: scale(0.9);
+    transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.render-modal-close {
+    display: none;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.06);
+    color: #a1a1aa;
+    font-size: 13px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.render-modal-close:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #f4f4f5;
+}
+
+/* Tombol close cuma muncul kalau modal dibuka manual (bukan kunjungan pertama) */
+.render-modal-overlay.has-close .render-modal-close {
+    display: flex;
+}
+
+.render-modal-overlay.show .render-modal-box {
+    transform: scale(1);
+}
+
+.render-modal-icon {
+    font-size: 42px;
+    margin-bottom: 15px;
+}
+
+.render-modal-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    color: #f8fafc;
+}
+
+.render-modal-desc {
+    font-size: 14px;
+    line-height: 1.6;
+    color: #94a3b8;
+    margin-bottom: 25px;
+}
+
+.render-modal-status {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: #f5a623;
+    background: rgba(245, 166, 35, 0.12);
+    border: 1px solid rgba(245, 166, 35, 0.3);
+    border-radius: 999px;
+    padding: 6px 14px;
+    display: inline-block;
+    margin-bottom: 20px;
+}
+
+.render-modal-status:empty {
+    display: none;
+    margin-bottom: 0;
+}
+
+.render-modal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.modal-btn {
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease;
+}
+
+.modal-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.modal-btn:active {
+    transform: translateY(0) scale(0.97);
+    transition-duration: 0.15s;
+}
+
+.btn-yes {
+    background: linear-gradient(135deg, #7b61ff, #6247e0);
+    color: white;
+    box-shadow: 0 8px 20px rgba(123, 97, 255, 0.4);
+}
+
+.btn-no {
+    background: #1e293b;
+    color: #cbd5e1;
+    border: 1px solid #334155;
+}
+
+/* =========================================================
+   === ATURAN MODE RINGAN ("TIDAK, MODE RINGAN") - ANTI LAG ===
+   ========================================================= */
+/* 1. Matikan bola liquid glass & animasinya (biar ringan), tapi latar tetap
+      berwarna sesuai tema aktif di database.js — gradient statis, no blur, no animasi */
+body.low-perf .orb,
+body.low-perf .glass-ball,
+body.low-perf .bg-glow-bottom {
+    display: none !important;
+    animation: none !important;
+}
+
+body.low-perf {
+    background:
+        radial-gradient(circle at 12% 12%, rgba(var(--ball1-mid), 0.55), transparent 42%),
+        radial-gradient(circle at 88% 88%, rgba(var(--ball2-mid), 0.55), transparent 42%),
+        #050505 !important;
+}
+
+/* 2. Ganti kontainer kaca dengan card solid yang rapi, tapi tetap ada aksen
+      warna tipis sesuai tema aktif biar gak polos/kusam */
+body.low-perf .bio-container {
+    background: linear-gradient(160deg, #101a2e, #0a0f1c) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(var(--ball1-mid), 0.35) !important;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 0 45px rgba(var(--ball1-mid), 0.18) !important;
+}
+
+/* 3. Ubah tombol Liquid Glass jadi tombol flat/ringan, tapi tetap pakai
+      warna tema masing-masing link (--c1/--c2) biar gak seragam abu semua */
+body.low-perf .glass-btn {
+    background: rgba(var(--c1), 0.14) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(var(--c1), 0.4) !important;
+    box-shadow: none !important;
+    animation: none !important;
+    color: #f1f5f9 !important;
+}
+
+body.low-perf .glass-btn:hover {
+    background: rgba(var(--c1), 0.26) !important;
+    border-color: rgba(var(--c1), 0.75) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(var(--c1), 0.3) !important;
+}
+
+/* 4. Matikan efek pantulan cahaya mengkilap & pelangi berat */
+body.low-perf .glass-btn::after,
+body.low-perf .crystal-gloss::before {
+    display: none !important;
+    animation: none !important;
+}
+
+body.low-perf .rainbow-gloss,
+body.low-perf .crystal-gloss {
+    animation: none !important;
+    border-color: #475569 !important;
+    box-shadow: none !important;
+}
+
+/* 5. Sederhanakan tombol Performa jadi flat, tanpa blur & animasi */
+body.low-perf .perf-fab {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    color: #94a3b8 !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4) !important;
+    animation: none !important;
+}
+
+body.low-perf .perf-fab:hover {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+}
+
+/* =========================================================
+   === ATURAN MODE NORMAL / BERAT (DEFAULT LIQUID GLASS) ===
+   ========================================================= */
+/* === 2 BOLA CAHAYA GRADASI BIRU-UNGU DI ATAS DASAR HITAM === */
+.orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(110px);
+    opacity: 0.55;
+    mix-blend-mode: screen;
+    z-index: -1;
+    will-change: transform;
+    pointer-events: none;
+}
+
+.orb-1 {
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle at 30% 30%, rgba(var(--ball1-inner), 1) 0%, rgba(var(--ball1-mid), 1) 75%);
+    top: -12%;
+    left: -12%;
+    animation: floatOrb1 36s infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.orb-2 {
+    width: 460px;
+    height: 460px;
+    background: radial-gradient(circle at 65% 65%, rgba(var(--ball2-inner), 1) 0%, rgba(var(--ball2-mid), 1) 75%);
+    bottom: -14%;
+    right: -12%;
+    animation: floatOrb2 40s infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+/* Cahaya lembut naik dari bawah layar, biru-ungu, berdenyut pelan */
+.bg-glow-bottom {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: -25%;
+    height: 50vh;
+    background: radial-gradient(ellipse at center, rgba(var(--ball1-inner), 0.4) 0%, rgba(var(--ball1-mid), 0.22) 45%, transparent 75%);
+    filter: blur(90px);
+    z-index: -1;
+    pointer-events: none;
+    will-change: opacity, transform;
+    animation: bottomGlowPulse 9s ease-in-out infinite;
+}
+
+@keyframes bottomGlowPulse {
+    0%, 100% { opacity: 0.55; transform: translateY(0) scale(1); }
+    50%      { opacity: 1; transform: translateY(-20px) scale(1.1); }
+}
+
+/* Bola kaca (glass ball) — nempel & bergerak bareng cahaya di belakangnya */
+.glass-ball {
+    position: fixed;
+    border-radius: 50%;
+    z-index: -1;
+    pointer-events: none;
+    will-change: transform;
+    backdrop-filter: blur(6px) saturate(160%);
+    -webkit-backdrop-filter: blur(6px) saturate(160%);
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+}
+
+.glass-ball-1 {
+    width: 220px;
+    height: 220px;
+    top: 4%;
+    left: 6%;
+    background:
+        radial-gradient(circle at 28% 24%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.12) 14%, transparent 32%),
+        radial-gradient(circle at 55% 60%, rgba(var(--ball1-inner), 0.55) 0%, rgba(var(--ball1-mid), 0.5) 55%, rgba(var(--ball1-outer), 0.3) 100%);
+    box-shadow:
+        inset -16px -16px 36px rgba(0,0,0,0.3),
+        inset 10px 10px 22px rgba(255,255,255,0.25),
+        0 25px 55px rgba(var(--ball1-outer), 0.5),
+        0 0 70px rgba(var(--ball1-inner), 0.3);
+    animation: floatOrb1 36s infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+.glass-ball-2 {
+    width: 200px;
+    height: 200px;
+    bottom: 6%;
+    right: 6%;
+    background:
+        radial-gradient(circle at 30% 26%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.1) 14%, transparent 32%),
+        radial-gradient(circle at 58% 62%, rgba(var(--ball2-inner), 0.55) 0%, rgba(var(--ball2-mid), 0.5) 55%, rgba(var(--ball2-outer), 0.3) 100%);
+    box-shadow:
+        inset -14px -14px 32px rgba(0,0,0,0.3),
+        inset 9px 9px 20px rgba(255,255,255,0.22),
+        0 25px 55px rgba(var(--ball2-outer), 0.5),
+        0 0 65px rgba(var(--ball2-inner), 0.3);
+    animation: floatOrb2 40s infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+/* Lampu halo yang nempel di pinggiran bola, berdenyut pelan (bukan ngilang) */
+.glass-ball::before {
+    content: '';
+    position: absolute;
+    inset: -16px;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(2px);
+    animation: ballHalo 10s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.glass-ball-1::before {
+    box-shadow: 0 0 45px 14px rgba(var(--ball1-inner), 0.55);
+}
+
+.glass-ball-2::before {
+    box-shadow: 0 0 45px 14px rgba(var(--ball2-inner), 0.55);
+    animation-delay: -5s;
+}
+
+@keyframes ballHalo {
+    0%, 100% { opacity: 0.45; transform: scale(1); }
+    50%      { opacity: 0.85; transform: scale(1.15); }
+}
+
+@keyframes floatOrb1 {
+    0%   { transform: translate(0, 0) scale(1); }
+    18%  { transform: translate(140px, 90px) scale(1.3); }
+    38%  { transform: translate(40px, 210px) scale(0.8); }
+    55%  { transform: translate(200px, 170px) scale(1.4); }
+    72%  { transform: translate(90px, 40px) scale(0.9); }
+    88%  { transform: translate(210px, 110px) scale(1.15); }
+    100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes floatOrb2 {
+    0%   { transform: translate(0, 0) scale(1); }
+    15%  { transform: translate(-120px, -80px) scale(1.35); }
+    33%  { transform: translate(-60px, -200px) scale(0.85); }
+    50%  { transform: translate(-210px, -110px) scale(1.4); }
+    68%  { transform: translate(-40px, -30px) scale(0.8); }
+    85%  { transform: translate(-180px, -160px) scale(1.2); }
+    100% { transform: translate(0, 0) scale(1); }
+}
+
+/* === WADAH KACA UTAMA === */
+.bio-container {
+    width: 100%;
+    max-width: 440px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 35px;
+    padding: 45px 30px;
+    text-align: center;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+    z-index: 10;
+}
+
+/* === FOTO PROFIL (100% KUNCI 1:1 OTOMATIS ANTI LONJONG) === */
+.profile-img-wrapper {
+    position: relative;
+    width: 120px !important;
+    height: 120px !important;
+    min-width: 120px !important;
+    min-height: 120px !important;
+    margin: 0 auto 20px auto;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    border: 3px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.profile-pic {
+    width: 100% !important;
+    height: 100% !important;
+    aspect-ratio: 1 / 1 !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    border-radius: 50% !important;
+    display: block;
+    flex-shrink: 0;
+}
+
+/* === TYPOGRAPHY === */
+.nama {
+    font-size: 28px;
+    font-weight: 900;
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, #ffffff, #9ca3af);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sub-nama {
+    font-size: 14px;
+    color: #a794ff;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.artikel {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 30px;
+}
+
+.links-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* === TOMBOL SEBENING KACA DENGAN IKON SVG === */
+.glass-btn {
+    display: block;
+    text-decoration: none;
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 16px 20px;
+    border-radius: 20px;
+    
+    --c1: 255, 255, 255;
+    --c2: 255, 255, 255;
+    
+    background: linear-gradient(135deg, rgba(var(--c1), 0.18), rgba(var(--c2), 0.04));
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(var(--c1), 0.35);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+    
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                border-radius 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                background 0.45s ease,
+                border-color 0.45s ease,
+                box-shadow 0.45s ease,
+                color 0.3s ease;
+}
+
+.btn-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.btn-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.btn-svg {
+    transition: transform 0.3s ease;
+}
+
+.glass-btn:hover .btn-svg {
+    transform: scale(1.15) rotate(-5deg);
+}
+
+.glass-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 45%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
+}
+
+.glass-btn:hover, .glass-btn:active {
+    border-radius: 30px 12px 30px 12px;
+    background: linear-gradient(135deg, rgba(var(--c1), 0.35), rgba(var(--c2), 0.15));
+    box-shadow: 0 15px 30px rgba(var(--c1), 0.35);
+    border-color: rgba(var(--c1), 0.8);
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(var(--c1), 0.8);
+}
+
+.glass-btn:hover {
+    transform: translateY(-4px);
+}
+
+.glass-btn:active {
+    transform: translateY(-1px) scale(0.98);
+    transition-duration: 0.15s;
+}
+
+/* === KHUSUS CRYSTAL UNGU & BIRU (MENGKILAP / GLOSSY SHIMMER) === */
+.crystal-gloss {
+    border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+    box-shadow: 0 0 20px rgba(var(--c1), 0.5), inset 0 0 15px rgba(255, 255, 255, 0.3) !important;
+}
+
+.crystal-gloss::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -150%;
+    width: 100%;
+    height: 200%;
+    background: linear-gradient(
+        120deg, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.65) 50%, 
+        transparent 70%
+    );
+    transform: rotate(25deg);
+    animation: crystalShine 3.5s infinite linear;
+    pointer-events: none;
+    z-index: 2;
+}
+
+@keyframes crystalShine {
+    0%   { left: -150%; }
+    40%  { left: 150%; }
+    100% { left: 150%; }
+}
+
+/* === KHUSUS PELANGI (RAINBOW GLOSS) === */
+.rainbow-gloss {
+    background: linear-gradient(135deg, rgba(255,0,76,0.2), rgba(0,255,128,0.2), rgba(0,76,255,0.2)) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.6) !important;
+    animation: rainbowPulse 4s infinite alternate ease-in-out;
+}
+
+@keyframes rainbowPulse {
+    0%   { box-shadow: 0 10px 25px rgba(255, 0, 76, 0.35); border-color: #ff004c; }
+    33%  { box-shadow: 0 10px 25px rgba(0, 255, 128, 0.35); border-color: #00ff80; }
+    66%  { box-shadow: 0 10px 25px rgba(0, 180, 255, 0.35); border-color: #00b4ff; }
+    100% { box-shadow: 0 10px 25px rgba(255, 0, 255, 0.35); border-color: #ff00ff; }
+}
+
+/* === TOOLTIP UMUM (DIPAKAI TOMBOL MENGAMBANG APAPUN) === */
+[data-tooltip]::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    right: 70px;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(10px);
+    pointer-events: none;
+    transition: 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #f4f4f5;
+}
+
+[data-tooltip]:hover::before {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* === TOMBOL PERFORMA MENGAMBANG BAWAH KANAN === */
+.perf-fab {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 1000;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    color: #f5a623;
+    border: 1.5px solid rgba(245, 166, 35, 0.5);
+    background: linear-gradient(135deg, rgba(245, 166, 35, 0.3), rgba(123, 97, 255, 0.12));
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 20px rgba(245, 166, 35, 0.25), inset 0 1px 1px rgba(255,255,255,0.35);
+    outline: none;
+    -webkit-touch-callout: none;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.4s ease,
+                box-shadow 0.4s ease;
+    animation: perfFabPulse 3.5s infinite ease-in-out;
+}
+
+.perf-fab:hover {
+    transform: scale(1.08);
+    border-color: rgba(245, 166, 35, 0.9);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 32px rgba(245, 166, 35, 0.5), inset 0 1px 1px rgba(255,255,255,0.45);
+}
+
+.perf-fab:active {
+    transform: scale(0.94);
+    transition-duration: 0.15s;
+}
+
+.perf-fab-icon {
+    transition: transform 0.3s ease;
+}
+
+.perf-fab:hover .perf-fab-icon {
+    transform: scale(1.1);
+}
+
+@keyframes perfFabPulse {
+    0%, 100% { box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 20px rgba(245, 166, 35, 0.25), inset 0 1px 1px rgba(255,255,255,0.35); }
+    50%      { box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 32px rgba(245, 166, 35, 0.45), inset 0 1px 1px rgba(255,255,255,0.35); }
+}

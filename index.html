@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vinz Dash</title>
+    
+    <link rel="icon" type="image/png" href="assets/icon.png">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="renderModal" class="render-modal-overlay">
+        <div class="render-modal-box">
+            <button id="btnRenderClose" class="render-modal-close" type="button" aria-label="Tutup">✕</button>
+            <div class="render-modal-icon">⚡</div>
+            <h3 class="render-modal-title">Pengaturan Performa</h3>
+            <p class="render-modal-desc">
+                Apakah perangkat Anda kuat menangani <b>render grafis berat</b> (animasi cahaya, blur kaca & efek mengkilap)?
+            </p>
+            <div id="renderModalStatus" class="render-modal-status"></div>
+            <div class="render-modal-buttons">
+                <button id="btnRenderYes" class="modal-btn btn-yes">Iya, Kuat</button>
+                <button id="btnRenderNo" class="modal-btn btn-no">Tidak, Mode Ringan</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="glass-ball glass-ball-1"></div>
+    <div class="glass-ball glass-ball-2"></div>
+    <div class="bg-glow-bottom"></div>
+
+    <div class="bio-container">
+        <div class="profile-img-wrapper">
+            <img src="assets/profile.png" alt="Profile" class="profile-pic" onerror="this.src='https://via.placeholder.com/150'">
+        </div>
+        
+        <h1 class="nama">Vinz</h1>
+        <h2 class="sub-nama">Web Developer</h2>
+        <p class="artikel">
+            Selamat datang di profil saya! Saya adalah seorang pengembang
+        </p>
+
+        <div id="linksContainer" class="links-container"></div>
+    </div>
+
+    <button class="perf-fab" id="perfFab" type="button" data-tooltip="Pengaturan Performa" aria-label="Buka pengaturan performa">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="perf-fab-icon"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+    </button>
+
+    <script src="database.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
