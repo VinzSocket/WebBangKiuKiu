@@ -35,7 +35,7 @@ const backgroundThemes = {
     }
 };
 
-const activeBackgroundTheme = "tampilan3"; // <-- ganti ke "tampilan2" atau "tampilan3" buat ganti tampilan latar
+const activeBackgroundTheme = "tampilan1"; // <-- ganti ke "tampilan2" atau "tampilan3" buat ganti tampilan latar
 
 // =========================================================================
 // PANDUAN 40 TEMA WARNA GRADIEN LIQUID GLASS
@@ -51,39 +51,15 @@ const activeBackgroundTheme = "tampilan3"; // <-- ganti ke "tampilan2" atau "tam
 
 const databaseLink = [
     { 
-        nama: "Melofy Music Player", 
-        url: "melofy.vinzhosting.my.id",  // Otomatis diubah jadi https:// agar tidak 404!
+        nama: "Callme", 
+        url: "https://wa.me/6289691911210",  // Otomatis diubah jadi https:// agar tidak 404!
         tema: 40,                         // Crystal Biru Mengkilap
-        svg: "music" 
-    },
-    { 
-        nama: "Kawasan Halu Creator", 
-        url: "https://chat.whatsapp.com/KQyCJIeMWWmJ9nAuIits4u?s=cl&p=a&mlu=4/", 
-        tema: 15,                         // Gradien Hutan
         svg: "whatsapp" 
     },
     { 
-        nama: "Repository RTXU", 
-        url: "github.com/Vinz-LLG/RTXU", 
-        tema: 38,                         // Pelangi (Rainbow)
-        svg: "github" 
-    },
-    { 
-        nama: "Server Database Panel", 
-        url: "https://render.com/", 
-        tema: 39,                         // Crystal Ungu Mengkilap
-        svg: "database" 
-    },
-    { 
-        nama: "Website Portfolio Utama", 
-        url: "vinzhosting.my.id", 
-        tema: 7,                          // Sian Cyber
-        svg: "web" 
-    },
-    { 
-        nama: "Google Drive Storage", 
-        url: "drive.google.com", 
-        tema: 6,                          // Emas Royal
-        svg: "drive" 
+        nama: "Instagram", 
+        url: "https://instagram.com/kizzx_23", 
+        tema: 38,                         // Gradien Hutan
+        svg: "instagram",
     }
 ];
