@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tic Tac Toe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-1:#6b4226;
+    --wood-2:#43280f;
+    --board-1:#25402f;
+    --board-2:#132419;
+    --chalk-white:#f3efe4;
+    --chalk-cyan:#8fd9d4;
+    --chalk-coral:#f2937c;
+    --chalk-yellow:#eccf6f;
+    --muted:rgba(243,239,228,0.55);
+    --danger:#f28a7c;
+    --focus:#eccf6f;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background: radial-gradient(circle at 50% 0%, #2b2118, #14100c 72%);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    color:var(--chalk-white);
+    padding:22px 14px;
+  }
+  .frame{
+    width:100%;
+    max-width:420px;
+    background:linear-gradient(160deg,var(--wood-1),var(--wood-2));
+    border-radius:22px;
+    padding:14px 12px 20px;
+    box-shadow:0 24px 60px rgba(0,0,0,0.5), inset 0 0 0 2px rgba(255,255,255,0.05);
+  }
+  .ledge{
+    display:flex;
+    gap:10px;
+    justify-content:center;
+    padding-bottom:12px;
+  }
+  .chalk-piece{ width:34px; height:12px; overflow:visible; }
+  .piece-white{ fill:#f3efe4; }
+  .piece-cyan{ fill:#8fd9d4; }
+  .piece-coral{ fill:#f2937c; }
+
+  .board-panel{
+    position:relative;
+    background:radial-gradient(120% 140% at 50% 0%, var(--board-1), var(--board-2));
+    border-radius:14px;
+    padding:20px 16px 24px;
+    min-height:500px;
+    box-shadow:inset 0 0 46px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.03);
+    overflow:hidden;
+  }
+  .screen{ display:none; flex-direction:column; align-items:center; gap:18px; }
+  .screen.active{ display:flex; }
+
+  .title{
+    font-family:'Caveat',cursive;
+    font-size:2.7rem;
+    margin:6px 0 0;
+    line-height:1;
+  }
+  .tagline{ margin:0; color:var(--muted); font-size:0.95rem; text-align:center; }
+  .subtitle{ font-family:'Caveat',cursive; font-size:1.7rem; margin:0; }
+
+  .top-row{ width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .top-row > div{ flex:1; text-align:center; }
+
+  .btn-row{ width:100%; display:flex; flex-direction:column; gap:12px; }
+  .btn{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    padding:14px 18px;
+    background:rgba(243,239,228,0.05);
+    border:1.5px solid rgba(243,239,228,0.5);
+    border-radius:10px;
+    color:var(--chalk-white);
+    font-size:1.05rem;
+    font-family:inherit;
+    cursor:pointer;
+    transition:background .15s ease, transform .1s ease, border-color .15s ease;
+  }
+  .btn:hover{ background:rgba(243,239,228,0.1); border-color:var(--chalk-white); }
+  .btn:active{ transform:scale(0.98); }
+  .btn:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .btn svg{ flex-shrink:0; width:22px; height:22px; }
+  .btn .label{ display:flex; flex-direction:column; align-items:flex-start; line-height:1.2; }
+  .btn .sub{ font-size:0.72rem; color:var(--muted); font-weight:normal; }
+
+  .icon-btn{
+    background:none; border:none; color:var(--chalk-white); cursor:pointer;
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    border-radius:8px; flex-shrink:0;
+  }
+  .icon-btn:hover{ background:rgba(243,239,228,0.08); }
+  .icon-btn:focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+  .icon-btn svg{ width:20px; height:20px; }
+
+  .code-box{
+    display:flex; align-items:center; gap:10px;
+    border:1.5px dashed rgba(243,239,228,0.55);
+    border-radius:10px; padding:10px 18px;
+  }
+  .code-text{ font-family:'Courier New',monospace; font-size:1.6rem; letter-spacing:5px; min-width:5ch; text-align:center; }
+
+  .room-input{
+    width:100%; text-align:center; text-transform:uppercase; letter-spacing:5px;
+    font-family:'Courier New',monospace; font-size:1.3rem;
+    background:rgba(243,239,228,0.05); border:1.5px solid rgba(243,239,228,0.4);
+    border-radius:10px; padding:12px; color:var(--chalk-white);
+  }
+  .room-input:focus{ outline:none; border-color:var(--focus); }
+  .room-input::placeholder{ color:var(--muted); letter-spacing:normal; text-transform:none; font-family:inherit; font-size:1rem; }
+
+  .error-text{ color:var(--danger); font-size:0.85rem; min-height:1.2em; text-align:center; }
+  .feedback-text{ color:var(--chalk-cyan); font-size:0.85rem; min-height:1.2em; text-align:center; }
+
+  .spinner{ width:36px; height:36px; animation:spin 1s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .board-svg{ width:min(82vw,300px); aspect-ratio:1/1; display:block; touch-action:manipulation; }
+  .cell{ cursor:pointer; }
+  .cell rect{ fill:transparent; }
+  .grid-line{ stroke:#f3efe4; stroke-width:6; stroke-linecap:round; opacity:0.85; }
+  .mark-pop{ transform-box:fill-box; transform-origin:center; animation:pop .22s ease-out; }
+  @keyframes pop{ from{ transform:scale(0.35); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  .mark-x line{ stroke:#8fd9d4; stroke-width:11; stroke-linecap:round; }
+  .mark-o circle{ stroke:#f2937c; stroke-width:11; fill:none; }
+  .win-line{ stroke:#eccf6f; stroke-width:8; stroke-linecap:round; opacity:0; transition:opacity .25s ease; }
+  .win-line.show{ opacity:1; }
+
+  .status-line{ font-size:1.05rem; margin:0; }
+  .context-line{ font-size:0.78rem; color:var(--muted); margin:2px 0 0; }
+
+  .result-overlay{
+    position:absolute; inset:0; background:rgba(9,15,11,0.9);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+    opacity:0; pointer-events:none; transition:opacity .2s ease; border-radius:14px; padding:24px;
+    text-align:center;
+  }
+  .result-overlay.show{ opacity:1; pointer-events:auto; }
+  .result-text{ font-family:'Caveat',cursive; font-size:2.3rem; margin:0; }
+  .result-overlay .btn-row{ max-width:230px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+  <div class="ledge" aria-hidden="true">
+    <svg class="chalk-piece" viewBox="0 0 34 12"><rect class="piece-white" x="1" y="1" width="32" height="10" rx="5"/></svg>
+    <svg class="chalk-piece" viewBox="0 0 34 12"><rect class="piece-cyan" x="1" y="1" width="32" height="10" rx="5" transform="rotate(-5 17 6)"/></svg>
+    <svg class="chalk-piece" viewBox="0 0 34 12"><rect class="piece-coral" x="1" y="1" width="32" height="10" rx="5" transform="rotate(4 17 6)"/></svg>
+  </div>
+
+  <div class="board-panel">
+
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs>
+        <filter id="chalkRough" filterUnits="userSpaceOnUse" x="-60" y="-60" width="420" height="420">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+    </svg>
+
+    <!-- MENU -->
+    <section class="screen active" id="screen-menu">
+      <h1 class="title">Tic Tac Toe</h1>
+      <p class="tagline">Papan sudah siap. Giliranmu.</p>
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="btn" id="btn-vs-bot" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="11" rx="2"/><path d="M9 8V5a3 3 0 0 1 6 0v3"/><circle cx="9.5" cy="13.2" r="1.1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="13.2" r="1.1" fill="currentColor" stroke="none"/><path d="M9.5 16.5h5"/><path d="M2 12h3M19 12h3"/></svg>
+          <span>Main lawan bot</span>
+        </button>
+        <button class="btn" id="btn-online" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="19" r="1.3" fill="currentColor" stroke="none"/><path d="M8.3 15.6a5.2 5.2 0 0 1 7.4 0"/><path d="M5.2 12.1a9.4 9.4 0 0 1 13.6 0"/></svg>
+          <span>Main online</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- BOT DIFFICULTY -->
+    <section class="screen" id="screen-bot">
+      <div class="top-row">
+        <button class="icon-btn" data-back="screen-menu" type="button" aria-label="Kembali">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <div><h2 class="subtitle">Tingkat kesulitan</h2></div>
+        <span style="width:34px"></span>
+      </div>
+      <div class="btn-row">
+        <button class="btn diff-btn" data-diff="very_easy" type="button"><span>Sangat mudah</span></button>
+        <button class="btn diff-btn" data-diff="easy" type="button"><span>Mudah</span></button>
+        <button class="btn diff-btn" data-diff="normal" type="button"><span>Normal</span></button>
+        <button class="btn diff-btn" data-diff="hard" type="button"><span>Sulit</span></button>
+        <button class="btn diff-btn" data-diff="extreme" type="button">
+          <span class="label">Ekstrem<span class="sub">Tak terkalahkan</span></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ONLINE MENU -->
+    <section class="screen" id="screen-online-menu">
+      <div class="top-row">
+        <button class="icon-btn" data-back="screen-menu" type="button" aria-label="Kembali">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <div><h2 class="subtitle">Main online</h2></div>
+        <span style="width:34px"></span>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btn-create-room" type="button"><span>Buat room</span></button>
+        <button class="btn" id="btn-join-room" type="button"><span>Gabung room</span></button>
+      </div>
+    </section>
+
+    <!-- CREATE ROOM -->
+    <section class="screen" id="screen-create">
+      <div class="top-row">
+        <button class="icon-btn" id="btn-cancel-create" type="button" aria-label="Batalkan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <div><h2 class="subtitle">Buat room</h2></div>
+        <span style="width:34px"></span>
+      </div>
+      <p class="tagline">Bagikan kode ini ke temanmu</p>
+      <div class="code-box">
+        <span class="code-text" id="room-code-text">-----</span>
+        <button class="icon-btn" id="btn-copy-code" type="button" aria-label="Salin kode room">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+        </button>
+      </div>
+      <p class="feedback-text" id="copy-feedback"></p>
+      <svg class="spinner" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+        <circle cx="17" cy="17" r="14" stroke="rgba(243,239,228,0.15)" stroke-width="4"/>
+        <path d="M31 17a14 14 0 0 0-14-14" stroke="#8fd9d4" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <p class="context-line" id="create-status">Menyiapkan room…</p>
+    </section>
+
+    <!-- JOIN ROOM -->
+    <section class="screen" id="screen-join">
+      <div class="top-row">
+        <button class="icon-btn" data-back="screen-online-menu" type="button" aria-label="Kembali">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <div><h2 class="subtitle">Gabung room</h2></div>
+        <span style="width:34px"></span>
+      </div>
+      <input class="room-input" id="join-input" maxlength="5" placeholder="Kode room" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" aria-label="Kode room">
+      <p class="error-text" id="join-error"></p>
+      <button class="btn" id="btn-join-confirm" type="button"><span>Gabung</span></button>
+    </section>
+
+    <!-- GAME -->
+    <section class="screen" id="screen-game">
+      <div class="top-row">
+        <button class="icon-btn" id="btn-leave-game" type="button" aria-label="Menu utama">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h5v-5h2v5h5v-9"/></svg>
+        </button>
+        <div>
+          <p class="status-line" id="status-line">Giliranmu (X)</p>
+          <p class="context-line" id="context-line"></p>
+        </div>
+        <span style="width:34px"></span>
+      </div>
+
+      <svg id="board" class="board-svg" viewBox="0 0 300 300">
+        <line x1="100" y1="14" x2="100" y2="286" class="grid-line" filter="url(#chalkRough)"/>
+        <line x1="200" y1="14" x2="200" y2="286" class="grid-line" filter="url(#chalkRough)"/>
+        <line x1="14" y1="100" x2="286" y2="100" class="grid-line" filter="url(#chalkRough)"/>
+        <line x1="14" y1="200" x2="286" y2="200" class="grid-line" filter="url(#chalkRough)"/>
+        <line id="win-line" class="win-line" x1="0" y1="0" x2="0" y2="0" filter="url(#chalkRough)"/>
+        <g class="cell" data-index="0" transform="translate(0,0)"><rect width="100" height="100"/><g class="mark"></g></g>
+        <g class="cell" data-index="1" transform="translate(100,0)"><rect width="100" height="100"/><g class="mark"></g></g>
+        <g class="cell" data-index="2" transform="translate(200,0)"><rect width="100" height="100"/><g class="mark"></g></g>
+        <g class="cell" data-index="3" transform="translate(0,100)"><rect width="100" height="100"/><g class="mark"></g></g>
+        <g class="cell" data-index="4" transform="translate(100,100)"><rect width="100" height="100"/><g class="mark"></g></g>
+        <g class="cell" data-index="5" transform="translate(200,100)"><rect width="100" height="100"/><g class="mark"></g></g>
+        <g class="cell" data-index="6" transform="translate(0,200)"><rect width="100" height="100"/><g class="mark"></g></g>
+        <g class="cell" data-index="7" transform="translate(100,200)"><rect width="100" height="100"/><g class="mark"></g></g>
+        <g class="cell" data-index="8" transform="translate(200,200)"><rect width="100" height="100"/><g class="mark"></g></g>
+      </svg>
+
+      <div class="result-overlay" id="result-overlay">
+        <p class="result-text" id="result-text">Kamu menang!</p>
+        <div class="btn-row">
+          <button class="btn" id="btn-play-again" type="button"><span>Main lagi</span></button>
+          <button class="btn" id="btn-home" type="button"><span>Menu utama</span></button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1/dist/peerjs.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var WIN_COMBOS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  var ROOM_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  var ROOM_PREFIX = "neonchalk-";
+
+  function el(id){ return document.getElementById(id); }
+
+  var screens = {};
+  document.querySelectorAll(".screen").forEach(function(s){ screens[s.id] = s; });
+
+  function showScreen(id){
+    Object.keys(screens).forEach(function(k){ screens[k].classList.remove("active"); });
+    screens[id].classList.add("active");
+  }
+
+  document.querySelectorAll("[data-back]").forEach(function(btn){
+    btn.addEventListener("click", function(){ showScreen(btn.getAttribute("data-back")); });
+  });
+
+  var state = {
+    mode: null,
+    board: Array(9).fill(null),
+    turn: "X",
+    active: false,
+    mySymbol: "X",
+    difficulty: "normal"
+  };
+  var botTimeout = null;
+  var peer = null, conn = null;
+
+  var cellEls = Array.prototype.slice.call(document.querySelectorAll("#board .cell"));
+  var winLineEl = el("win-line");
+
+  function cellCenter(i){
+    return { x: (i % 3) * 100 + 50, y: Math.floor(i / 3) * 100 + 50 };
+  }
+
+  function clearBoardUI(){
+    cellEls.forEach(function(c){ c.querySelector(".mark").innerHTML = ""; });
+    winLineEl.classList.remove("show");
+    winLineEl.setAttribute("x1", 0);
+    winLineEl.setAttribute("y1", 0);
+    winLineEl.setAttribute("x2", 0);
+    winLineEl.setAttribute("y2", 0);
+  }
+
+  function renderMark(i, symbol){
+    var group = cellEls[i].querySelector(".mark");
+    var angle = (Math.random() * 10 - 5).toFixed(1);
+    if(symbol === "X"){
+      group.innerHTML = '<g class="mark-pop mark-x" filter="url(#chalkRough)" transform="rotate(' + angle + ' 50 50)">' +
+        '<line x1="26" y1="26" x2="74" y2="74"/>' +
+        '<line x1="74" y1="26" x2="26" y2="74"/>' +
+        '</g>';
+    } else {
+      group.innerHTML = '<g class="mark-pop mark-o" filter="url(#chalkRough)" transform="rotate(' + angle + ' 50 50)">' +
+        '<circle cx="50" cy="50" r="30"/>' +
+        '</g>';
+    }
+  }
+
+  function drawWinLine(combo){
+    var a = cellCenter(combo[0]);
+    var c = cellCenter(combo[2]);
+    winLineEl.setAttribute("x1", a.x);
+    winLineEl.setAttribute("y1", a.y);
+    winLineEl.setAttribute("x2", c.x);
+    winLineEl.setAttribute("y2", c.y);
+    requestAnimationFrame(function(){ winLineEl.classList.add("show"); });
+  }
+
+  function checkWinner(bd){
+    for(var k = 0; k < WIN_COMBOS.length; k++){
+      var combo = WIN_COMBOS[k];
+      var a = combo[0], b = combo[1], c = combo[2];
+      if(bd[a] && bd[a] === bd[b] && bd[b] === bd[c]) return { winner: bd[a], combo: combo };
+    }
+    if(bd.every(function(v){ return v; })) return { winner: "draw", combo: null };
+    return null;
+  }
+
+  function minimax(bd, depth, isMax){
+    var result = checkWinner(bd);
+    if(result){
+      if(result.winner === "O") return 10 - depth;
+      if(result.winner === "X") return depth - 10;
+      return 0;
+    }
+    var i;
+    if(isMax){
+      var best = -Infinity;
+      for(i = 0; i < 9; i++){
+        if(!bd[i]){
+          bd[i] = "O";
+          best = Math.max(best, minimax(bd, depth + 1, false));
+          bd[i] = null;
+        }
+      }
+      return best;
+    } else {
+      var worst = Infinity;
+      for(i = 0; i < 9; i++){
+        if(!bd[i]){
+          bd[i] = "X";
+          worst = Math.min(worst, minimax(bd, depth + 1, true));
+          bd[i] = null;
+        }
+      }
+      return worst;
+    }
+  }
+
+  function bestMove(bd){
+    var bestScore = -Infinity, move = null;
+    for(var i = 0; i < 9; i++){
+      if(!bd[i]){
+        bd[i] = "O";
+        var score = minimax(bd, 0, false);
+        bd[i] = null;
+        if(score > bestScore){ bestScore = score; move = i; }
+      }
+    }
+    return move;
+  }
+
+  function randomMove(bd){
+    var empty = [];
+    bd.forEach(function(v, i){ if(!v) empty.push(i); });
+    return empty[Math.floor(Math.random() * empty.length)];
+  }
+
+  function getBotMove(bd, difficulty){
+    var probMap = { very_easy: 0, easy: 0.25, normal: 0.55, hard: 0.85, extreme: 1 };
+    var p = probMap.hasOwnProperty(difficulty) ? probMap[difficulty] : 0.55;
+    if(Math.random() < p) return bestMove(bd);
+    return randomMove(bd);
+  }
+
+  function updateStatusLine(){
+    if(!state.active) return;
+    var statusEl = el("status-line");
+    if(state.mode === "bot"){
+      statusEl.textContent = state.turn === "X" ? "Giliranmu (X)" : "Bot berpikir…";
+    } else {
+      var opp = state.mySymbol === "X" ? "O" : "X";
+      statusEl.textContent = state.turn === state.mySymbol ? ("Giliranmu (" + state.mySymbol + ")") : ("Giliran lawan (" + opp + ")");
+    }
+  }
+
+  function setContextLine(text){ el("context-line").textContent = text; }
+
+  function showResult(kind){
+    var map = {
+      win: "Kamu menang!",
+      lose: state.mode === "bot" ? "Bot menang." : "Lawan menang.",
+      draw: "Seri.",
+      left: "Lawan keluar dari permainan."
+    };
+    el("result-text").textContent = map[kind];
+    el("btn-play-again").style.display = kind === "left" ? "none" : "flex";
+    el("result-overlay").classList.add("show");
+  }
+
+  function hideResult(){ el("result-overlay").classList.remove("show"); }
+
+  function checkGameEnd(){
+    var result = checkWinner(state.board);
+    if(!result) return false;
+    state.active = false;
+    if(result.winner === "draw"){
+      showResult("draw");
+    } else {
+      drawWinLine(result.combo);
+      var iWon = state.mode === "bot" ? result.winner === "X" : result.winner === state.mySymbol;
+      showResult(iWon ? "win" : "lose");
+    }
+    return true;
+  }
+
+  function makeMove(index, symbol){
+    if(state.board[index]) return;
+    state.board[index] = symbol;
+    renderMark(index, symbol);
+  }
+
+  function handleCellClick(index){
+    if(!state.active || state.board[index]) return;
+    if(state.mode === "bot"){
+      if(state.turn !== "X") return;
+      makeMove(index, "X");
+      updateStatusLine();
+      if(checkGameEnd()) return;
+      state.turn = "O";
+      updateStatusLine();
+      botTimeout = setTimeout(function(){
+        var idx = getBotMove(state.board, state.difficulty);
+        if(idx !== undefined && idx !== null && state.active){
+          makeMove(idx, "O");
+          if(!checkGameEnd()){
+            state.turn = "X";
+            updateStatusLine();
+          }
+        }
+      }, 450);
+    } else if(state.mode === "online"){
+      if(state.turn !== state.mySymbol || !conn || !conn.open) return;
+      makeMove(index, state.mySymbol);
+      conn.send({ type: "move", index: index, symbol: state.mySymbol });
+      if(checkGameEnd()) return;
+      state.turn = state.mySymbol === "X" ? "O" : "X";
+      updateStatusLine();
+    }
+  }
+
+  cellEls.forEach(function(c){
+    c.addEventListener("click", function(){ handleCellClick(Number(c.getAttribute("data-index"))); });
+  });
+
+  function resetGameState(){
+    clearTimeout(botTimeout);
+    state.board = Array(9).fill(null);
+    state.turn = "X";
+    state.active = true;
+    clearBoardUI();
+    hideResult();
+    updateStatusLine();
+  }
+
+  function startBotGame(difficulty){
+    state.mode = "bot";
+    state.difficulty = difficulty;
+    state.mySymbol = "X";
+    var labels = { very_easy: "Sangat mudah", easy: "Mudah", normal: "Normal", hard: "Sulit", extreme: "Ekstrem" };
+    setContextLine("Lawan bot • " + labels[difficulty]);
+    resetGameState();
+    showScreen("screen-game");
+  }
+
+  document.querySelectorAll(".diff-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){ startBotGame(btn.getAttribute("data-diff")); });
+  });
+
+  el("btn-vs-bot").addEventListener("click", function(){ showScreen("screen-bot"); });
+  el("btn-online").addEventListener("click", function(){ showScreen("screen-online-menu"); });
+
+  function generateRoomCode(len){
+    var code = "";
+    for(var i = 0; i < len; i++) code += ROOM_CHARS[Math.floor(Math.random() * ROOM_CHARS.length)];
+    return code;
+  }
+
+  function teardownPeer(){
+    if(conn){ try{ conn.close(); }catch(e){} conn = null; }
+    if(peer){ try{ peer.destroy(); }catch(e){} peer = null; }
+  }
+
+  function setupConnectionEvents(){
+    conn.on("data", function(data){
+      if(!data) return;
+      if(data.type === "move"){
+        makeMove(data.index, data.symbol);
+        if(!checkGameEnd()){
+          state.turn = data.symbol === "X" ? "O" : "X";
+          updateStatusLine();
+        }
+      } else if(data.type === "restart"){
+        resetGameState();
+      } else if(data.type === "leave"){
+        state.active = false;
+        showResult("left");
+      }
+    });
+    conn.on("close", function(){
+      if(state.mode === "online" && screens["screen-game"].classList.contains("active")){
+        state.active = false;
+        showResult("left");
+      }
+    });
+  }
+
+  var createAttempts = 0;
+  function tryCreateRoom(){
+    if(typeof Peer === "undefined"){
+      el("create-status").textContent = "Fitur online butuh koneksi internet.";
+      return;
+    }
+    var code = generateRoomCode(5);
+    peer = new Peer(ROOM_PREFIX + code);
+    peer.on("open", function(){
+      el("room-code-text").textContent = code;
+      el("create-status").textContent = "Menunggu lawan bergabung…";
+    });
+    peer.on("connection", function(c){
+      if(conn){ c.close(); return; }
+      conn = c;
+      conn.on("open", function(){
+        state.mode = "online";
+        state.mySymbol = "X";
+        setContextLine("Online • Kamu bermain sebagai X");
+        setupConnectionEvents();
+        resetGameState();
+        showScreen("screen-game");
+      });
+    });
+    peer.on("error", function(err){
+      if(err && err.type === "unavailable-id" && createAttempts < 5){
+        createAttempts++;
+        peer.destroy();
+        tryCreateRoom();
+      } else {
+        el("create-status").textContent = "Gagal membuat room. Coba lagi.";
+      }
+    });
+  }
+
+  el("btn-create-room").addEventListener("click", function(){
+    createAttempts = 0;
+    el("room-code-text").textContent = "-----";
+    el("create-status").textContent = "Menyiapkan room…";
+    el("copy-feedback").textContent = "";
+    showScreen("screen-create");
+    tryCreateRoom();
+  });
+
+  el("btn-cancel-create").addEventListener("click", function(){
+    teardownPeer();
+    showScreen("screen-online-menu");
+  });
+
+  el("btn-copy-code").addEventListener("click", function(){
+    var code = el("room-code-text").textContent;
+    if(code === "-----") return;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(code).then(function(){
+        el("copy-feedback").textContent = "Disalin!";
+        setTimeout(function(){ el("copy-feedback").textContent = ""; }, 1500);
+      }).catch(function(){
+        el("copy-feedback").textContent = code;
+      });
+    } else {
+      el("copy-feedback").textContent = code;
+    }
+  });
+
+  el("btn-join-room").addEventListener("click", function(){
+    el("join-input").value = "";
+    el("join-error").textContent = "";
+    showScreen("screen-join");
+  });
+
+  el("join-input").addEventListener("input", function(e){
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  });
+
+  el("btn-join-confirm").addEventListener("click", function(){
+    var code = el("join-input").value.trim();
+    if(code.length < 4){
+      el("join-error").textContent = "Masukkan kode room yang valid.";
+      return;
+    }
+    if(typeof Peer === "undefined"){
+      el("join-error").textContent = "Fitur online butuh koneksi internet.";
+      return;
+    }
+    el("join-error").textContent = "";
+    el("btn-join-confirm").disabled = true;
+
+    peer = new Peer();
+    peer.on("open", function(){
+      conn = peer.connect(ROOM_PREFIX + code, { reliable: true });
+      var settled = false;
+      conn.on("open", function(){
+        settled = true;
+        state.mode = "online";
+        state.mySymbol = "O";
+        setContextLine("Online • Kamu bermain sebagai O");
+        setupConnectionEvents();
+        state.board = Array(9).fill(null);
+        state.turn = "X";
+        state.active = true;
+        clearBoardUI();
+        hideResult();
+        updateStatusLine();
+        el("btn-join-confirm").disabled = false;
+        showScreen("screen-game");
+      });
+      conn.on("error", function(){
+        if(!settled){
+          el("join-error").textContent = "Room tidak ditemukan.";
+          el("btn-join-confirm").disabled = false;
+        }
+      });
+      setTimeout(function(){
+        if(!settled){
+          el("join-error").textContent = "Room tidak ditemukan.";
+          el("btn-join-confirm").disabled = false;
+          teardownPeer();
+        }
+      }, 8000);
+    });
+    peer.on("error", function(){
+      el("join-error").textContent = "Gagal terhubung. Coba lagi.";
+      el("btn-join-confirm").disabled = false;
+    });
+  });
+
+  el("btn-play-again").addEventListener("click", function(){
+    resetGameState();
+    if(state.mode === "online" && conn && conn.open){
+      conn.send({ type: "restart" });
+    }
+  });
+
+  function goHome(){
+    clearTimeout(botTimeout);
+    if(state.mode === "online" && conn && conn.open){
+      try{ conn.send({ type: "leave" }); }catch(e){}
+    }
+    teardownPeer();
+    state.active = false;
+    state.mode = null;
+    hideResult();
+    showScreen("screen-menu");
+  }
+
+  el("btn-home").addEventListener("click", goHome);
+  el("btn-leave-game").addEventListener("click", goHome);
+
+})();
+</script>
+</body>
+</html>
