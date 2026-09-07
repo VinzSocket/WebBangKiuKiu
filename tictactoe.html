@@ -63,7 +63,8 @@
     overflow:hidden;
   }
   .screen{ display:none; flex-direction:column; align-items:center; gap:18px; }
-  .screen.active{ display:flex; }
+  .screen.active{ display:flex; animation:screenIn .3s cubic-bezier(.22,.61,.36,1); }
+  @keyframes screenIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
 
   .title{
     font-family:'Caveat',cursive;
@@ -127,6 +128,15 @@
   .room-input:focus{ outline:none; border-color:var(--focus); }
   .room-input::placeholder{ color:var(--muted); letter-spacing:normal; text-transform:none; font-family:inherit; font-size:1rem; }
 
+  .name-input{
+    width:100%; text-align:center;
+    font-family:inherit; font-size:1rem;
+    background:rgba(243,239,228,0.05); border:1.5px solid rgba(243,239,228,0.4);
+    border-radius:10px; padding:12px; color:var(--chalk-white);
+  }
+  .name-input:focus{ outline:none; border-color:var(--focus); }
+  .name-input::placeholder{ color:var(--muted); }
+
   .error-text{ color:var(--danger); font-size:0.85rem; min-height:1.2em; text-align:center; }
   .feedback-text{ color:var(--chalk-cyan); font-size:0.85rem; min-height:1.2em; text-align:center; }
 
@@ -135,9 +145,10 @@
 
   .board-svg{ width:min(82vw,300px); aspect-ratio:1/1; display:block; touch-action:manipulation; }
   .cell{ cursor:pointer; }
-  .cell rect{ fill:transparent; }
+  .cell rect{ fill:transparent; transition:fill .15s ease; }
+  .cell:hover rect{ fill:rgba(243,239,228,0.05); }
   .grid-line{ stroke:#f3efe4; stroke-width:6; stroke-linecap:round; opacity:0.85; }
-  .mark-pop{ transform-box:fill-box; transform-origin:center; animation:pop .22s ease-out; }
+  .mark-pop{ transform-box:fill-box; transform-origin:center; animation:pop .22s ease-out; will-change:transform, opacity; }
   @keyframes pop{ from{ transform:scale(0.35); opacity:0; } to{ transform:scale(1); opacity:1; } }
   .mark-x line{ stroke:#8fd9d4; stroke-width:11; stroke-linecap:round; }
   .mark-o circle{ stroke:#f2937c; stroke-width:11; fill:none; }
@@ -150,10 +161,11 @@
   .result-overlay{
     position:absolute; inset:0; background:rgba(9,15,11,0.9);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
-    opacity:0; pointer-events:none; transition:opacity .2s ease; border-radius:14px; padding:24px;
-    text-align:center;
+    opacity:0; transform:scale(0.94); pointer-events:none;
+    transition:opacity .22s ease, transform .22s cubic-bezier(.22,.61,.36,1);
+    border-radius:14px; padding:24px; text-align:center;
   }
-  .result-overlay.show{ opacity:1; pointer-events:auto; }
+  .result-overlay.show{ opacity:1; transform:scale(1); pointer-events:auto; }
   .result-text{ font-family:'Caveat',cursive; font-size:2.3rem; margin:0; }
   .result-overlay .btn-row{ max-width:230px; }
 
@@ -175,9 +187,13 @@
 
     <svg width="0" height="0" style="position:absolute" aria-hidden="true">
       <defs>
-        <filter id="chalkRough" filterUnits="userSpaceOnUse" x="-60" y="-60" width="420" height="420">
+        <filter id="chalkRoughLine" filterUnits="userSpaceOnUse" x="-20" y="-20" width="340" height="340">
           <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
           <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <filter id="chalkRoughMark" filterUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" result="n2"/>
+          <feDisplacementMap in="SourceGraphic" in2="n2" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
       </defs>
     </svg>
@@ -227,6 +243,8 @@
         <div><h2 class="subtitle">Main online</h2></div>
         <span style="width:34px"></span>
       </div>
+      <p class="tagline">Nama kamu</p>
+      <input class="name-input" id="player-name-input" maxlength="14" placeholder="Nama kamu" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Nama kamu">
       <div class="btn-row">
         <button class="btn" id="btn-create-room" type="button"><span>Buat room</span></button>
         <button class="btn" id="btn-join-room" type="button"><span>Gabung room</span></button>
@@ -271,6 +289,24 @@
       <button class="btn" id="btn-join-confirm" type="button"><span>Gabung</span></button>
     </section>
 
+    <!-- LOBBY -->
+    <section class="screen" id="screen-lobby">
+      <div class="top-row">
+        <button class="icon-btn" id="btn-leave-lobby" type="button" aria-label="Menu utama">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9h5v-5h2v5h5v-9"/></svg>
+        </button>
+        <div><h2 class="subtitle">Ruang tunggu</h2></div>
+        <span style="width:34px"></span>
+      </div>
+      <p class="status-line" id="lobby-players"></p>
+      <svg class="spinner" id="lobby-spinner" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+        <circle cx="17" cy="17" r="14" stroke="rgba(243,239,228,0.15)" stroke-width="4"/>
+        <path d="M31 17a14 14 0 0 0-14-14" stroke="#8fd9d4" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <p class="context-line" id="lobby-status">Menunggu info pemain lain…</p>
+      <button class="btn" id="btn-start-game" type="button" style="display:none;"><span>Mulai</span></button>
+    </section>
+
     <!-- GAME -->
     <section class="screen" id="screen-game">
       <div class="top-row">
@@ -285,11 +321,11 @@
       </div>
 
       <svg id="board" class="board-svg" viewBox="0 0 300 300">
-        <line x1="100" y1="14" x2="100" y2="286" class="grid-line" filter="url(#chalkRough)"/>
-        <line x1="200" y1="14" x2="200" y2="286" class="grid-line" filter="url(#chalkRough)"/>
-        <line x1="14" y1="100" x2="286" y2="100" class="grid-line" filter="url(#chalkRough)"/>
-        <line x1="14" y1="200" x2="286" y2="200" class="grid-line" filter="url(#chalkRough)"/>
-        <line id="win-line" class="win-line" x1="0" y1="0" x2="0" y2="0" filter="url(#chalkRough)"/>
+        <line x1="100" y1="14" x2="100" y2="286" class="grid-line" filter="url(#chalkRoughLine)"/>
+        <line x1="200" y1="14" x2="200" y2="286" class="grid-line" filter="url(#chalkRoughLine)"/>
+        <line x1="14" y1="100" x2="286" y2="100" class="grid-line" filter="url(#chalkRoughLine)"/>
+        <line x1="14" y1="200" x2="286" y2="200" class="grid-line" filter="url(#chalkRoughLine)"/>
+        <line id="win-line" class="win-line" x1="0" y1="0" x2="0" y2="0" filter="url(#chalkRoughLine)"/>
         <g class="cell" data-index="0" transform="translate(0,0)"><rect width="100" height="100"/><g class="mark"></g></g>
         <g class="cell" data-index="1" transform="translate(100,0)"><rect width="100" height="100"/><g class="mark"></g></g>
         <g class="cell" data-index="2" transform="translate(200,0)"><rect width="100" height="100"/><g class="mark"></g></g>
@@ -303,9 +339,14 @@
 
       <div class="result-overlay" id="result-overlay">
         <p class="result-text" id="result-text">Kamu menang!</p>
-        <div class="btn-row">
+        <p class="context-line" id="rematch-status"></p>
+        <div class="btn-row" id="result-actions">
           <button class="btn" id="btn-play-again" type="button"><span>Main lagi</span></button>
           <button class="btn" id="btn-home" type="button"><span>Menu utama</span></button>
+        </div>
+        <div class="btn-row" id="rematch-actions" style="display:none;">
+          <button class="btn" id="btn-rematch-yes" type="button"><span>Ya, main lagi</span></button>
+          <button class="btn" id="btn-rematch-no" type="button"><span>Tidak</span></button>
         </div>
       </div>
     </section>
@@ -346,6 +387,15 @@
   };
   var botTimeout = null;
   var peer = null, conn = null;
+  var myName = "";
+  var opponentName = "";
+  var isHost = false;
+  var rematchPhase = null;
+
+  function randomDefaultName(){
+    return "Pemain" + Math.floor(10 + Math.random() * 90);
+  }
+  if(el("player-name-input")){ el("player-name-input").value = randomDefaultName(); }
 
   var cellEls = Array.prototype.slice.call(document.querySelectorAll("#board .cell"));
   var winLineEl = el("win-line");
@@ -367,14 +417,14 @@
     var group = cellEls[i].querySelector(".mark");
     var angle = (Math.random() * 10 - 5).toFixed(1);
     if(symbol === "X"){
-      group.innerHTML = '<g class="mark-pop mark-x" filter="url(#chalkRough)" transform="rotate(' + angle + ' 50 50)">' +
+      group.innerHTML = '<g class="mark-pop"><g class="mark-x" filter="url(#chalkRoughMark)" transform="rotate(' + angle + ' 50 50)">' +
         '<line x1="26" y1="26" x2="74" y2="74"/>' +
         '<line x1="74" y1="26" x2="26" y2="74"/>' +
-        '</g>';
+        '</g></g>';
     } else {
-      group.innerHTML = '<g class="mark-pop mark-o" filter="url(#chalkRough)" transform="rotate(' + angle + ' 50 50)">' +
+      group.innerHTML = '<g class="mark-pop"><g class="mark-o" filter="url(#chalkRoughMark)" transform="rotate(' + angle + ' 50 50)">' +
         '<circle cx="50" cy="50" r="30"/>' +
-        '</g>';
+        '</g></g>';
     }
   }
 
@@ -462,11 +512,24 @@
       statusEl.textContent = state.turn === "X" ? "Giliranmu (X)" : "Bot berpikir…";
     } else {
       var opp = state.mySymbol === "X" ? "O" : "X";
-      statusEl.textContent = state.turn === state.mySymbol ? ("Giliranmu (" + state.mySymbol + ")") : ("Giliran lawan (" + opp + ")");
+      statusEl.textContent = state.turn === state.mySymbol ? ("Giliranmu (" + state.mySymbol + ")") : ((opponentName || "Lawan") + " (" + opp + ")");
     }
   }
 
   function setContextLine(text){ el("context-line").textContent = text; }
+
+  function updateLobbyPlayers(){
+    var hostLabel = (isHost ? myName : (opponentName || "…")) + " (X)";
+    var guestLabel = (isHost ? (opponentName || "…") : myName) + " (O)";
+    el("lobby-players").textContent = hostLabel + "  vs  " + guestLabel;
+  }
+
+  function beginOnlineMatch(){
+    var oppSym = state.mySymbol === "X" ? "O" : "X";
+    setContextLine(myName + " (" + state.mySymbol + ")  vs  " + (opponentName || "Lawan") + " (" + oppSym + ")");
+    resetGameState();
+    showScreen("screen-game");
+  }
 
   function showResult(kind){
     var map = {
@@ -475,6 +538,10 @@
       draw: "Seri.",
       left: "Lawan keluar dari permainan."
     };
+    rematchPhase = null;
+    el("rematch-status").textContent = "";
+    el("rematch-actions").style.display = "none";
+    el("result-actions").style.display = "flex";
     el("result-text").textContent = map[kind];
     el("btn-play-again").style.display = kind === "left" ? "none" : "flex";
     el("result-overlay").classList.add("show");
@@ -511,6 +578,7 @@
       if(checkGameEnd()) return;
       state.turn = "O";
       updateStatusLine();
+      var thinkDelay = 320 + Math.random() * 280;
       botTimeout = setTimeout(function(){
         var idx = getBotMove(state.board, state.difficulty);
         if(idx !== undefined && idx !== null && state.active){
@@ -520,7 +588,7 @@
             updateStatusLine();
           }
         }
-      }, 450);
+      }, thinkDelay);
     } else if(state.mode === "online"){
       if(state.turn !== state.mySymbol || !conn || !conn.open) return;
       makeMove(index, state.mySymbol);
@@ -537,6 +605,7 @@
 
   function resetGameState(){
     clearTimeout(botTimeout);
+    rematchPhase = null;
     state.board = Array(9).fill(null);
     state.turn = "X";
     state.active = true;
@@ -576,24 +645,66 @@
   function setupConnectionEvents(){
     conn.on("data", function(data){
       if(!data) return;
-      if(data.type === "move"){
+      if(data.type === "hello"){
+        opponentName = data.name || "Lawan";
+        updateLobbyPlayers();
+        if(isHost){
+          el("lobby-status").textContent = opponentName + " sudah siap.";
+          el("lobby-spinner").style.display = "none";
+          el("btn-start-game").style.display = "flex";
+        } else {
+          el("lobby-status").textContent = "Menunggu host memulai permainan…";
+        }
+      } else if(data.type === "start"){
+        beginOnlineMatch();
+      } else if(data.type === "move"){
         makeMove(data.index, data.symbol);
         if(!checkGameEnd()){
           state.turn = data.symbol === "X" ? "O" : "X";
           updateStatusLine();
         }
-      } else if(data.type === "restart"){
+      } else if(data.type === "rematch_request"){
+        if(rematchPhase === "waiting"){
+          conn.send({ type: "rematch_accept" });
+          resetGameState();
+        } else {
+          rematchPhase = "incoming";
+          el("rematch-status").textContent = (opponentName || "Lawan") + " ingin main lagi.";
+          el("result-actions").style.display = "none";
+          el("rematch-actions").style.display = "flex";
+        }
+      } else if(data.type === "rematch_accept"){
         resetGameState();
+      } else if(data.type === "rematch_decline"){
+        rematchPhase = "declined_opponent";
+        el("rematch-status").textContent = (opponentName || "Lawan") + " tidak ingin main lagi.";
+        el("rematch-actions").style.display = "none";
+        el("result-actions").style.display = "flex";
+        el("btn-play-again").style.display = "none";
       } else if(data.type === "leave"){
         state.active = false;
-        showResult("left");
+        conn = null;
+        if(screens["screen-game"].classList.contains("active")){
+          showResult("left");
+        } else if(screens["screen-lobby"].classList.contains("active")){
+          el("lobby-status").textContent = "Lawan meninggalkan ruang tunggu.";
+          el("btn-start-game").style.display = "none";
+          el("lobby-spinner").style.display = "none";
+        }
       }
     });
     conn.on("close", function(){
-      if(state.mode === "online" && screens["screen-game"].classList.contains("active")){
+      var wasGame = screens["screen-game"].classList.contains("active");
+      var wasLobby = screens["screen-lobby"].classList.contains("active");
+      if(state.mode === "online" && wasGame){
         state.active = false;
         showResult("left");
+      } else if(wasLobby){
+        el("lobby-status").textContent = "Lawan meninggalkan ruang tunggu.";
+        el("btn-start-game").style.display = "none";
+        el("lobby-spinner").style.display = "none";
       }
+      conn = null;
     });
   }
 
@@ -612,13 +723,18 @@
     peer.on("connection", function(c){
       if(conn){ c.close(); return; }
       conn = c;
+      isHost = true;
       conn.on("open", function(){
         state.mode = "online";
         state.mySymbol = "X";
-        setContextLine("Online • Kamu bermain sebagai X");
+        opponentName = "";
         setupConnectionEvents();
-        resetGameState();
-        showScreen("screen-game");
+        el("lobby-players").textContent = myName + " (X)  vs  …";
+        el("lobby-status").textContent = "Menunggu info pemain lain…";
+        el("lobby-spinner").style.display = "";
+        el("btn-start-game").style.display = "none";
+        showScreen("screen-lobby");
+        conn.send({ type: "hello", name: myName });
       });
     });
     peer.on("error", function(err){
@@ -633,6 +749,9 @@
   }
 
   el("btn-create-room").addEventListener("click", function(){
+    myName = (el("player-name-input").value || "").trim() || randomDefaultName();
+    isHost = true;
+    opponentName = "";
     createAttempts = 0;
     el("room-code-text").textContent = "-----";
     el("create-status").textContent = "Menyiapkan room…";
@@ -681,53 +800,83 @@
       el("join-error").textContent = "Fitur online butuh koneksi internet.";
       return;
     }
+    myName = (el("player-name-input").value || "").trim() || randomDefaultName();
+    isHost = false;
+    opponentName = "";
     el("join-error").textContent = "";
     el("btn-join-confirm").disabled = true;
+
+    var settled = false;
+    var joinTimeoutId = null;
+
+    function failJoin(message){
+      if(settled) return;
+      settled = true;
+      clearTimeout(joinTimeoutId);
+      el("join-error").textContent = message;
+      el("btn-join-confirm").disabled = false;
+      teardownPeer();
+    }
 
     peer = new Peer();
     peer.on("open", function(){
       conn = peer.connect(ROOM_PREFIX + code, { reliable: true });
-      var settled = false;
       conn.on("open", function(){
+        if(settled) return;
         settled = true;
+        clearTimeout(joinTimeoutId);
         state.mode = "online";
         state.mySymbol = "O";
-        setContextLine("Online • Kamu bermain sebagai O");
         setupConnectionEvents();
-        state.board = Array(9).fill(null);
-        state.turn = "X";
-        state.active = true;
-        clearBoardUI();
-        hideResult();
-        updateStatusLine();
         el("btn-join-confirm").disabled = false;
-        showScreen("screen-game");
+        el("lobby-players").textContent = "…  vs  " + myName + " (O)";
+        el("lobby-status").textContent = "Menunggu info pemain lain…";
+        el("lobby-spinner").style.display = "";
+        el("btn-start-game").style.display = "none";
+        showScreen("screen-lobby");
+        conn.send({ type: "hello", name: myName });
       });
-      conn.on("error", function(){
-        if(!settled){
-          el("join-error").textContent = "Room tidak ditemukan.";
-          el("btn-join-confirm").disabled = false;
-        }
-      });
-      setTimeout(function(){
-        if(!settled){
-          el("join-error").textContent = "Room tidak ditemukan.";
-          el("btn-join-confirm").disabled = false;
-          teardownPeer();
-        }
-      }, 8000);
+      conn.on("error", function(){ failJoin("Room tidak ditemukan."); });
+      joinTimeoutId = setTimeout(function(){ failJoin("Room tidak ditemukan."); }, 8000);
     });
-    peer.on("error", function(){
-      el("join-error").textContent = "Gagal terhubung. Coba lagi.";
-      el("btn-join-confirm").disabled = false;
+    peer.on("error", function(err){
+      if(err && err.type === "peer-unavailable"){
+        failJoin("Room tidak ditemukan.");
+      } else {
+        failJoin("Gagal terhubung. Coba lagi.");
+      }
     });
   });
 
+  el("btn-start-game").addEventListener("click", function(){
+    if(conn && conn.open) conn.send({ type: "start" });
+    beginOnlineMatch();
+  });
+
   el("btn-play-again").addEventListener("click", function(){
-    resetGameState();
-    if(state.mode === "online" && conn && conn.open){
-      conn.send({ type: "restart" });
+    if(state.mode === "bot"){
+      resetGameState();
+      return;
     }
+    if(!conn || !conn.open || rematchPhase === "incoming") return;
+    rematchPhase = "waiting";
+    el("rematch-status").textContent = "Menunggu jawaban lawan…";
+    el("result-actions").style.display = "none";
+    conn.send({ type: "rematch_request" });
+  });
+
+  el("btn-rematch-yes").addEventListener("click", function(){
+    if(conn && conn.open) conn.send({ type: "rematch_accept" });
+    resetGameState();
+  });
+
+  el("btn-rematch-no").addEventListener("click", function(){
+    if(conn && conn.open) conn.send({ type: "rematch_decline" });
+    rematchPhase = "declined_self";
+    el("rematch-status").textContent = "Kamu memilih untuk tidak main lagi.";
+    el("rematch-actions").style.display = "none";
+    el("result-actions").style.display = "flex";
+    el("btn-play-again").style.display = "none";
   });
 
   function goHome(){
@@ -744,6 +893,7 @@
 
   el("btn-home").addEventListener("click", goHome);
   el("btn-leave-game").addEventListener("click", goHome);
+  el("btn-leave-lobby").addEventListener("click", goHome);
 
 })();
 </script>
