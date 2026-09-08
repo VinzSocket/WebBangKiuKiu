@@ -113,12 +113,13 @@
   #moveList::-webkit-scrollbar{width:6px;}
   #moveList::-webkit-scrollbar-thumb{background:var(--border); border-radius:3px;}
 
-  #joinCodeInput{
-    flex:1; background:var(--panel-2); border:1px solid var(--border); border-radius:7px;
-    color:var(--text); padding:9px 10px; font-size:14px; letter-spacing:0.1em; text-transform:uppercase;
-    font-family:'Inter',sans-serif;
+  .field-input{
+    width:100%; background:var(--panel-2); border:1px solid var(--border); border-radius:7px;
+    color:var(--text); padding:9px 10px; font-size:14px; font-family:'Inter',sans-serif;
   }
-  #joinCodeInput::placeholder{color:var(--text-muted); letter-spacing:0.05em;}
+  .field-input::placeholder{color:var(--text-muted);}
+  #joinCodeInput{flex:1; letter-spacing:0.1em; text-transform:uppercase;}
+  #joinCodeInput::placeholder{letter-spacing:0.05em;}
   #onlineError{color:var(--danger); font-size:12.5px; margin-top:8px; min-height:16px;}
   .room-code-box{text-align:center; padding:8px 0 4px;}
   .room-code-box .cap{font-size:11.5px; letter-spacing:0.12em; color:var(--text-muted); text-transform:uppercase;}
@@ -137,6 +138,11 @@
     padding:9px; border-radius:7px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; font-size:13.5px;
   }
   .leave-btn:hover{background:rgba(193,89,90,0.1);}
+  .spinner-dot{
+    display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--brass);
+    animation:pulseDot 1s ease-in-out infinite;
+  }
+  @keyframes pulseDot{ 0%,100%{opacity:0.25;} 50%{opacity:1;} }
 
   .modal-overlay{position:fixed; inset:0; background:rgba(6,9,7,0.72); display:none; align-items:center; justify-content:center; z-index:50; padding:20px;}
   .modal-overlay.show{display:flex;}
@@ -156,7 +162,7 @@
 <div class="wrap">
   <header>
     <h1>Studio Catur</h1>
-    <p>Papan &amp; bidak full SVG &middot; Lawan bot, main berdua, atau online pakai kode room</p>
+    <p>Papan &amp; bidak full SVG &middot; Lawan bot, main berdua, atau online lewat internet</p>
   </header>
 
   <div class="layout">
@@ -201,11 +207,12 @@
 
         <div id="onlineOptions" class="row-gap" style="display:none;">
           <div id="onlineEntry">
+            <input id="playerNameInput" class="field-input" type="text" maxlength="14" placeholder="Nama kamu (opsional)" style="margin-bottom:8px;" autocomplete="off">
             <div class="actions" style="margin-bottom:8px;">
               <button id="btnCreateRoom" class="primary">Buat Room Baru</button>
             </div>
             <div style="display:flex; gap:6px;">
-              <input id="joinCodeInput" type="text" maxlength="6" placeholder="KODE ROOM">
+              <input id="joinCodeInput" class="field-input" type="text" maxlength="6" placeholder="KODE ROOM">
               <button id="btnJoinRoom" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 14px; border-radius:7px; font-weight:600; font-size:13.5px; cursor:pointer;">Gabung</button>
             </div>
             <div id="onlineError"></div>
@@ -217,6 +224,16 @@
               <button class="copy-btn" id="btnCopyCode">Salin Kode</button>
             </div>
             <div class="online-badge" id="onlinePlayerBadge"></div>
+            <div id="onlineRematchBox" style="display:none; text-align:center; margin-bottom:10px;">
+              <p id="onlineRematchStatus" style="font-size:12.5px; color:var(--text-muted); min-height:16px; margin:0 0 8px;"></p>
+              <div class="actions" id="onlineRematchActions" style="display:none; margin-bottom:8px;">
+                <button class="primary" id="btnRematchYes">Ya, Main Lagi</button>
+                <button id="btnRematchNo">Tidak</button>
+              </div>
+              <div class="actions" id="onlinePlayAgainWrap" style="display:none; margin-bottom:8px;">
+                <button class="primary" id="btnPlayAgainOnline">Main Lagi</button>
+              </div>
+            </div>
             <button class="leave-btn" id="btnLeaveRoom">Keluar Room</button>
           </div>
         </div>
@@ -251,6 +268,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1/dist/peerjs.min.js"></script>
 <script>
 (function(){
 "use strict";
@@ -549,31 +567,12 @@ function chooseBotMove(state, difficulty) {
   return near[Math.floor(Math.random() * near.length)].move;
 }
 
-/* ============================= ONLINE ROOM STORAGE ============================= */
-const storageAvailable = (typeof window !== 'undefined' && window.storage && typeof window.storage.get === 'function');
-const OFFLINE_MSG = 'Mode online butuh dibuka lewat pratinjau langsung di Claude (bukan file yang sudah diunduh lalu dibuka manual di browser).';
-const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-function genRoomCode(len){
-  len = len || 5;
-  let s = '';
-  for (let i = 0; i < len; i++) s += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
-  return s;
-}
-function genPlayerId(){ return 'p' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
-async function storageGet(key, shared){
-  try { return await window.storage.get(key, shared); } catch (e) { return null; }
-}
-async function storageSet(key, value, shared){
-  try { return await window.storage.set(key, value, shared); } catch (e) { return null; }
-}
-
 /* ============================= GAME STATE / UI ============================= */
 const FILES = 'abcdefgh';
 function sqName(r,c){ return FILES[c] + (8-r); }
 
 let game, undoStack, capturedList, moveRecords, flipped, gameOver, mode, difficulty, humanColor;
 let selected, pendingMoves, awaitingBot, pendingPromotion, lastMove;
-let onlineRoom = null, onlinePlayerId = null, onlineColor = null, onlineSeqSeen = -1, pollTimer = null;
 
 function freshGame(){
   return { board: initialBoard(), turn: 'w', castling: { wK:true,wQ:true,bK:true,bQ:true }, ep: null };
@@ -655,7 +654,8 @@ function applyEndOfMoveStatus(inCheck, legalAfter){
   }
 }
 
-function performMove(move){
+function performMove(move, opts){
+  opts = opts || {};
   const beforeSnapshot = cloneState(game);
   const allLegalBefore = legalMoves(game, game.turn);
   const mover = game.turn;
@@ -684,7 +684,10 @@ function performMove(move){
   renderMoveList();
   document.getElementById('btnUndo').disabled = (undoStack.length === 0) || mode === 'online';
 
-  if (mode === 'online' && onlineRoom) pushRoomState();
+  if (mode === 'online' && conn && conn.open && !opts.fromRemote) {
+    try { conn.send({ type: 'move', move }); } catch (e) {}
+  }
+  if (mode === 'online' && gameOver) showRematchPrompt();
   if (mode === 'bot' && game.turn !== humanColor && !gameOver) triggerBot();
 }
 
@@ -702,7 +705,7 @@ function triggerBot(){
 function handleSquareClick(r, c){
   if (gameOver || awaitingBot || pendingPromotion) return;
   if (mode === 'bot' && game.turn !== humanColor) return;
-  if (mode === 'online' && (!onlineRoom || onlineColor !== game.turn)) return;
+  if (mode === 'online' && (!conn || !conn.open || onlineColor !== game.turn)) return;
 
   const piece = game.board[r][c];
 
@@ -745,157 +748,6 @@ function openPromotionDialog(matches){
     choices.appendChild(btn);
   }
   overlay.classList.add('show');
-}
-
-/* ---------- online room flows ---------- */
-async function pushRoomState(){
-  if (!onlineRoom) return;
-  let players = { w: onlineColor === 'w' ? onlinePlayerId : null, b: onlineColor === 'b' ? onlinePlayerId : null };
-  let seq = (onlineSeqSeen > 0 ? onlineSeqSeen : 0) + 1;
-  let status = 'playing';
-  const res = await storageGet('room-' + onlineRoom, true);
-  if (res && res.value) {
-    try {
-      const prev = JSON.parse(res.value);
-      if (prev.players) players = prev.players;
-      if (prev.status) status = prev.status;
-      seq = (prev.seq || 0) + 1;
-    } catch (e) {}
-  }
-  const room = {
-    code: onlineRoom, board: game.board, turn: game.turn, castling: game.castling, ep: game.ep,
-    moveRecords, capturedList, lastMove, players, status, updatedAt: Date.now(), seq,
-  };
-  onlineSeqSeen = seq;
-  await storageSet('room-' + onlineRoom, JSON.stringify(room), true);
-}
-
-function applyRoomToLocalGame(room){
-  game = { board: room.board, turn: room.turn, castling: room.castling, ep: room.ep };
-  moveRecords = room.moveRecords || [];
-  capturedList = room.capturedList || [];
-  lastMove = room.lastMove || null;
-  selected = null;
-  pendingMoves = [];
-  const inCheck = isInCheck(game, game.turn);
-  const legalAfter = legalMoves(game, game.turn);
-  applyEndOfMoveStatus(inCheck, legalAfter);
-  render();
-  renderCaptured();
-  renderMoveList();
-  updateOnlineBadge(room);
-}
-
-function startPolling(){
-  stopPolling();
-  pollTimer = setInterval(pollRoom, 1500);
-}
-function stopPolling(){ if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
-async function pollRoom(){
-  if (!onlineRoom) return;
-  const res = await storageGet('room-' + onlineRoom, true);
-  if (!res || !res.value) return;
-  let room;
-  try { room = JSON.parse(res.value); } catch (e) { return; }
-  if (room.seq === onlineSeqSeen) return;
-  onlineSeqSeen = room.seq;
-  applyRoomToLocalGame(room);
-}
-
-function setOnlineBusy(b){
-  document.getElementById('btnCreateRoom').disabled = b || !storageAvailable;
-  document.getElementById('btnJoinRoom').disabled = b || !storageAvailable;
-}
-function showOnlineError(msg){ document.getElementById('onlineError').textContent = msg; }
-function showRoomEntryPanel(){
-  document.getElementById('onlineEntry').style.display = '';
-  document.getElementById('onlineActive').style.display = 'none';
-  document.getElementById('onlineError').textContent = storageAvailable ? '' : OFFLINE_MSG;
-  setOnlineBusy(false);
-}
-function showRoomPanel(room){
-  document.getElementById('onlineEntry').style.display = 'none';
-  document.getElementById('onlineActive').style.display = '';
-  document.getElementById('roomCodeDisplay').textContent = onlineRoom;
-  updateOnlineBadge(room);
-}
-function updateOnlineBadge(room){
-  const badge = document.getElementById('onlinePlayerBadge');
-  if (!badge) return;
-  const mine = onlineColor === 'w' ? 'Putih' : 'Hitam';
-  const bothIn = room && room.players && room.players.w && room.players.b;
-  badge.textContent = 'Anda bermain sebagai ' + mine + ' · ' + (bothIn ? 'Tersambung dengan lawan' : 'Menunggu lawan bergabung...');
-}
-
-async function createRoom(){
-  if (!storageAvailable) { showOnlineError(OFFLINE_MSG); return; }
-  setOnlineBusy(true);
-  showOnlineError('');
-  let code, exists = true, attempts = 0;
-  while (exists && attempts < 6) {
-    code = genRoomCode();
-    const res = await storageGet('room-' + code, true);
-    exists = !!(res && res.value);
-    attempts++;
-  }
-  onlinePlayerId = onlinePlayerId || genPlayerId();
-  onlineColor = 'w';
-  onlineRoom = code;
-  onlineSeqSeen = 1;
-  game = freshGame();
-  capturedList = []; moveRecords = []; lastMove = null; gameOver = false; selected = null; pendingMoves = [];
-  flipped = false;
-  const room = {
-    code, board: game.board, turn: game.turn, castling: game.castling, ep: game.ep,
-    moveRecords: [], capturedList: [], lastMove: null,
-    players: { w: onlinePlayerId, b: null }, status: 'waiting', updatedAt: Date.now(), seq: 1,
-  };
-  await storageSet('room-' + code, JSON.stringify(room), true);
-  setOnlineBusy(false);
-  showRoomPanel(room);
-  render(); renderCaptured(); renderMoveList();
-  setStatus('Menunggu lawan bergabung...', 'thinking');
-  document.getElementById('btnUndo').disabled = true;
-  startPolling();
-}
-
-async function joinRoomFlow(codeRaw){
-  if (!storageAvailable) { showOnlineError(OFFLINE_MSG); return; }
-  const code = (codeRaw || '').trim().toUpperCase();
-  if (!code) { showOnlineError('Masukkan kode room.'); return; }
-  setOnlineBusy(true);
-  showOnlineError('');
-  const res = await storageGet('room-' + code, true);
-  if (!res || !res.value) { setOnlineBusy(false); showOnlineError('Room "' + code + '" tidak ditemukan.'); return; }
-  let room;
-  try { room = JSON.parse(res.value); } catch (e) { setOnlineBusy(false); showOnlineError('Data room rusak.'); return; }
-  onlinePlayerId = onlinePlayerId || genPlayerId();
-  if (room.players && room.players.b && room.players.b !== onlinePlayerId) {
-    setOnlineBusy(false); showOnlineError('Room sudah penuh (2 pemain).'); return;
-  }
-  room.players = room.players || { w: null, b: null };
-  room.players.b = onlinePlayerId;
-  room.status = 'playing';
-  room.seq = (room.seq || 0) + 1;
-  room.updatedAt = Date.now();
-  await storageSet('room-' + code, JSON.stringify(room), true);
-  onlineRoom = code;
-  onlineColor = 'b';
-  onlineSeqSeen = room.seq;
-  flipped = true;
-  setOnlineBusy(false);
-  showRoomPanel(room);
-  applyRoomToLocalGame(room);
-  document.getElementById('btnUndo').disabled = true;
-  startPolling();
-}
-
-function leaveRoom(){
-  stopPolling();
-  onlineRoom = null;
-  onlineColor = null;
-  onlineSeqSeen = -1;
-  showRoomEntryPanel();
 }
 
 /* ---------- rendering ---------- */
@@ -1001,6 +853,222 @@ function renderMoveList(){
   el.scrollTop = el.scrollHeight;
 }
 
+/* ============================= ONLINE — real internet P2P via PeerJS ============================= */
+const ROOM_PREFIX = 'studiocatur-';
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function genRoomCode(len){
+  len = len || 5;
+  let s = '';
+  for (let i = 0; i < len; i++) s += CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)];
+  return s;
+}
+function randomDefaultName(){ return 'Pemain' + Math.floor(10 + Math.random() * 90); }
+function peerAvailable(){ return typeof Peer !== 'undefined'; }
+const NO_INTERNET_MSG = 'Main online butuh koneksi internet.';
+
+let peer = null, conn = null, isHost = false, myName = '', opponentName = '', onlineColor = null;
+let currentRoomCode = '-----', rematchPhase = null, createAttempts = 0, joinSettled = false, joinTimeoutId = null;
+
+function teardownPeer(){
+  if (conn) { try { conn.close(); } catch (e) {} conn = null; }
+  if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
+}
+
+function setOnlineBusy(b){
+  document.getElementById('btnCreateRoom').disabled = b;
+  document.getElementById('btnJoinRoom').disabled = b;
+}
+function showOnlineError(msg){ document.getElementById('onlineError').textContent = msg || ''; }
+function showRoomEntryPanel(){
+  document.getElementById('onlineEntry').style.display = '';
+  document.getElementById('onlineActive').style.display = 'none';
+  showOnlineError('');
+  setOnlineBusy(false);
+}
+function showRoomActivePanel(){
+  document.getElementById('onlineEntry').style.display = 'none';
+  document.getElementById('onlineActive').style.display = '';
+  document.getElementById('roomCodeDisplay').textContent = currentRoomCode;
+  document.getElementById('onlineRematchBox').style.display = 'none';
+  updateOnlineBadge();
+}
+function updateOnlineBadge(waiting){
+  const badge = document.getElementById('onlinePlayerBadge');
+  if (!badge) return;
+  const mineLabel = onlineColor === 'w' ? 'Putih' : 'Hitam';
+  const oppLabel = onlineColor === 'w' ? 'Hitam' : 'Putih';
+  if (waiting) {
+    badge.innerHTML = 'Menunggu lawan bergabung <span class="spinner-dot"></span>';
+  } else {
+    badge.textContent = 'Anda (' + mineLabel + ') vs ' + (opponentName || 'Lawan') + ' (' + oppLabel + ')';
+  }
+}
+
+function startOnlineMatch(){
+  game = freshGame();
+  capturedList = []; moveRecords = []; lastMove = null; gameOver = false;
+  selected = null; pendingMoves = []; pendingPromotion = null;
+  flipped = (onlineColor === 'b');
+  render(); renderCaptured(); renderMoveList();
+  setStatus(turnText());
+  document.getElementById('btnUndo').disabled = true;
+  showRoomActivePanel();
+}
+
+function showRematchPrompt(){
+  const box = document.getElementById('onlineRematchBox');
+  box.style.display = '';
+  document.getElementById('onlineRematchStatus').textContent = '';
+  document.getElementById('onlineRematchActions').style.display = 'none';
+  document.getElementById('onlinePlayAgainWrap').style.display = conn && conn.open ? '' : 'none';
+  rematchPhase = null;
+}
+
+function handleOpponentLeft(){
+  if (mode !== 'online') return;
+  gameOver = true;
+  setStatus('Lawan keluar dari room.', 'over');
+  render();
+  const box = document.getElementById('onlineRematchBox');
+  box.style.display = '';
+  document.getElementById('onlineRematchStatus').textContent = 'Lawan sudah tidak terhubung.';
+  document.getElementById('onlineRematchActions').style.display = 'none';
+  document.getElementById('onlinePlayAgainWrap').style.display = 'none';
+  conn = null;
+}
+
+function setupConnectionEvents(){
+  conn.on('data', (data) => {
+    if (!data) return;
+    if (data.type === 'hello') {
+      opponentName = data.name || 'Lawan';
+      updateOnlineBadge();
+    } else if (data.type === 'move') {
+      if (!gameOver) performMove(data.move, { fromRemote: true });
+    } else if (data.type === 'rematch_request') {
+      if (rematchPhase === 'waiting') {
+        try { conn.send({ type: 'rematch_accept' }); } catch (e) {}
+        startOnlineMatch();
+      } else {
+        rematchPhase = 'incoming';
+        document.getElementById('onlineRematchStatus').textContent = (opponentName || 'Lawan') + ' ingin main lagi.';
+        document.getElementById('onlinePlayAgainWrap').style.display = 'none';
+        document.getElementById('onlineRematchActions').style.display = '';
+      }
+    } else if (data.type === 'rematch_accept') {
+      startOnlineMatch();
+    } else if (data.type === 'rematch_decline') {
+      rematchPhase = 'declined_opponent';
+      document.getElementById('onlineRematchStatus').textContent = (opponentName || 'Lawan') + ' tidak ingin main lagi.';
+      document.getElementById('onlineRematchActions').style.display = 'none';
+      document.getElementById('onlinePlayAgainWrap').style.display = 'none';
+    } else if (data.type === 'leave') {
+      handleOpponentLeft();
+    }
+  });
+  conn.on('close', () => { handleOpponentLeft(); });
+}
+
+function tryCreateRoom(){
+  const code = genRoomCode();
+  peer = new Peer(ROOM_PREFIX + code);
+  peer.on('open', () => {
+    currentRoomCode = code;
+    document.getElementById('roomCodeDisplay').textContent = code;
+    updateOnlineBadge(true);
+  });
+  peer.on('connection', (c) => {
+    if (conn) { c.close(); return; }
+    conn = c;
+    isHost = true;
+    conn.on('open', () => {
+      onlineColor = 'w';
+      setupConnectionEvents();
+      startOnlineMatch();
+      try { conn.send({ type: 'hello', name: myName }); } catch (e) {}
+    });
+  });
+  peer.on('error', (err) => {
+    if (err && err.type === 'unavailable-id' && createAttempts < 5) {
+      createAttempts++;
+      peer.destroy();
+      tryCreateRoom();
+    } else {
+      showOnlineError('Gagal membuat room. Coba lagi.');
+      setOnlineBusy(false);
+    }
+  });
+}
+
+function createRoom(){
+  if (!peerAvailable()) { showOnlineError(NO_INTERNET_MSG); return; }
+  myName = (document.getElementById('playerNameInput').value || '').trim() || randomDefaultName();
+  isHost = true;
+  opponentName = '';
+  createAttempts = 0;
+  currentRoomCode = '-----';
+  showOnlineError('');
+  setOnlineBusy(true);
+  document.getElementById('onlineEntry').style.display = 'none';
+  document.getElementById('onlineActive').style.display = '';
+  document.getElementById('roomCodeDisplay').textContent = '-----';
+  document.getElementById('onlinePlayerBadge').textContent = 'Menyiapkan room...';
+  document.getElementById('onlineRematchBox').style.display = 'none';
+  tryCreateRoom();
+}
+
+function failJoin(msg){
+  if (joinSettled) return;
+  joinSettled = true;
+  clearTimeout(joinTimeoutId);
+  setOnlineBusy(false);
+  showOnlineError(msg);
+  teardownPeer();
+}
+
+function joinRoomFlow(codeRaw){
+  if (!peerAvailable()) { showOnlineError(NO_INTERNET_MSG); return; }
+  const code = (codeRaw || '').trim().toUpperCase();
+  if (code.length < 4) { showOnlineError('Masukkan kode room yang valid.'); return; }
+  myName = (document.getElementById('playerNameInput').value || '').trim() || randomDefaultName();
+  isHost = false;
+  opponentName = '';
+  currentRoomCode = code;
+  showOnlineError('');
+  setOnlineBusy(true);
+  joinSettled = false;
+
+  peer = new Peer();
+  peer.on('open', () => {
+    conn = peer.connect(ROOM_PREFIX + code, { reliable: true });
+    conn.on('open', () => {
+      if (joinSettled) return;
+      joinSettled = true;
+      clearTimeout(joinTimeoutId);
+      onlineColor = 'b';
+      setOnlineBusy(false);
+      setupConnectionEvents();
+      startOnlineMatch();
+      try { conn.send({ type: 'hello', name: myName }); } catch (e) {}
+    });
+    conn.on('error', () => failJoin('Room tidak ditemukan.'));
+    joinTimeoutId = setTimeout(() => failJoin('Room tidak ditemukan.'), 8000);
+  });
+  peer.on('error', (err) => {
+    if (err && err.type === 'peer-unavailable') failJoin('Room tidak ditemukan.');
+    else failJoin('Gagal terhubung. Coba lagi.');
+  });
+}
+
+function leaveOnlineSession(){
+  if (conn && conn.open) { try { conn.send({ type: 'leave' }); } catch (e) {} }
+  teardownPeer();
+  onlineColor = null;
+  opponentName = '';
+  rematchPhase = null;
+  showRoomEntryPanel();
+}
+
 /* ---------- events ---------- */
 document.getElementById('boardSvg').addEventListener('click', (e) => {
   const target = e.target.closest('[data-sq]');
@@ -1031,14 +1099,17 @@ setupSeg('modeSeg', (val) => {
   document.getElementById('mpOptions').style.display = (val === 'mp') ? '' : 'none';
   document.getElementById('onlineOptions').style.display = (val === 'online') ? '' : 'none';
   document.getElementById('newGameCard').style.display = (val === 'online') ? 'none' : '';
-  if (prevMode === 'online' && val !== 'online') leaveRoom();
-  if (val === 'bot' || val === 'mp') { newGame(); }
+  if (prevMode === 'online' && val !== 'online') leaveOnlineSession();
+  if (val === 'bot' || val === 'mp') newGame();
   if (val === 'online') {
     game = freshGame(); lastMove = null; selected = null; pendingMoves = []; gameOver = false;
     capturedList = []; moveRecords = [];
     render(); renderCaptured(); renderMoveList();
     showRoomEntryPanel();
     setStatus('Pilih Buat Room atau Gabung Room.');
+    if (!document.getElementById('playerNameInput').value) {
+      document.getElementById('playerNameInput').value = randomDefaultName();
+    }
   }
 });
 setupSeg('levelSeg', (val) => { difficulty = val; });
@@ -1070,11 +1141,14 @@ document.getElementById('btnCreateRoom').addEventListener('click', () => { creat
 document.getElementById('btnJoinRoom').addEventListener('click', () => {
   joinRoomFlow(document.getElementById('joinCodeInput').value);
 });
+document.getElementById('joinCodeInput').addEventListener('input', (e) => {
+  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+});
 document.getElementById('joinCodeInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') joinRoomFlow(document.getElementById('joinCodeInput').value);
 });
 document.getElementById('btnLeaveRoom').addEventListener('click', () => {
-  leaveRoom();
+  leaveOnlineSession();
   game = freshGame(); lastMove = null; selected = null; pendingMoves = []; gameOver = false;
   capturedList = []; moveRecords = [];
   render(); renderCaptured(); renderMoveList();
@@ -1082,13 +1156,28 @@ document.getElementById('btnLeaveRoom').addEventListener('click', () => {
 });
 document.getElementById('btnCopyCode').addEventListener('click', () => {
   const btn = document.getElementById('btnCopyCode');
-  const code = onlineRoom || '';
+  const code = currentRoomCode;
   const done = () => { const old = btn.textContent; btn.textContent = 'Tersalin!'; setTimeout(() => { btn.textContent = old; }, 1400); };
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(code).then(done).catch(done);
-  } else {
-    done();
-  }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done).catch(done);
+  else done();
+});
+document.getElementById('btnPlayAgainOnline').addEventListener('click', () => {
+  if (!conn || !conn.open || rematchPhase === 'incoming') return;
+  rematchPhase = 'waiting';
+  document.getElementById('onlineRematchStatus').textContent = 'Menunggu jawaban lawan...';
+  document.getElementById('onlinePlayAgainWrap').style.display = 'none';
+  try { conn.send({ type: 'rematch_request' }); } catch (e) {}
+});
+document.getElementById('btnRematchYes').addEventListener('click', () => {
+  try { conn && conn.send({ type: 'rematch_accept' }); } catch (e) {}
+  startOnlineMatch();
+});
+document.getElementById('btnRematchNo').addEventListener('click', () => {
+  try { conn && conn.send({ type: 'rematch_decline' }); } catch (e) {}
+  rematchPhase = 'declined_self';
+  document.getElementById('onlineRematchStatus').textContent = 'Kamu memilih untuk tidak main lagi.';
+  document.getElementById('onlineRematchActions').style.display = 'none';
+  document.getElementById('onlinePlayAgainWrap').style.display = 'none';
 });
 
 /* ============================= INIT ============================= */
