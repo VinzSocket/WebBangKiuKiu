@@ -809,6 +809,9 @@ let turnToastTimer = null;
 let selectedCombo = [];
 let lastRenderedView = null;
 let lastDiscardCount = null;
+let throwsFinishAt = 0;
+let roundOverPending = false;
+let roundToken = 0;
 
 /* ---- Kahoot-style cartoon buddy avatars, one per seat index (max 8 seats) ---- */
 const CHAR_COLORS = ['#e6635c','#4fa8de','#f0b23e','#5fbf78','#b47ee0','#e0709c','#3fd1c0','#e2954a'];
@@ -840,6 +843,8 @@ function isMyTurnNow(view){ return view.yourIdx === view.currentPlayerIdx; }
 /* ---- Card-throw animation: flies a floating card from a source rect to the discard pile ---- */
 function animateThrow(fromRect, toRect, card, faceDown, delay){
   if (!fromRect || !toRect) return;
+  const finishAt = Date.now() + (delay || 0) + 480;
+  if (finishAt > throwsFinishAt) throwsFinishAt = finishAt;
   const clone = document.createElement('div');
   clone.className = 'thrown-card';
   clone.style.left = fromRect.left + 'px';
@@ -1109,20 +1114,29 @@ function openColorPicker(cardIds, view){
 
 function showRoundOverIfNeeded(view){
   const overlay = document.getElementById('roundOverOverlay');
-  if (!view || !view.roundOver) { overlay.classList.remove('show'); return; }
-  const winnerName = view.seats[view.winnerIdx] ? view.seats[view.winnerIdx].name : '?';
-  document.getElementById('roundOverText').textContent = winnerName + ' menang ronde ini!';
-  document.getElementById('roundScoreList').innerHTML = view.seats.map((s,i) =>
-    '<div class="srow" style="display:flex;justify-content:space-between;padding:3px 0;"><span>'+escapeText(s.name)+'</span><span>'+(view.scores?view.scores[i]:0)+'</span></div>'
-  ).join('');
-  const canControlNext = !(app.mode === 'online' && app.onlineRole === 'guest');
-  document.getElementById('btnNextRound').style.display = canControlNext ? '' : 'none';
-  overlay.classList.add('show');
+  if (!view || !view.roundOver) { overlay.classList.remove('show'); roundOverPending = false; return; }
+  if (overlay.classList.contains('show') || roundOverPending) return;
+  roundOverPending = true;
+  const myToken = roundToken;
+  const wait = Math.max(320, throwsFinishAt - Date.now() + 80);
+  setTimeout(() => {
+    roundOverPending = false;
+    if (myToken !== roundToken) return;
+    const winnerName = view.seats[view.winnerIdx] ? view.seats[view.winnerIdx].name : '?';
+    document.getElementById('roundOverText').textContent = winnerName + ' menang ronde ini!';
+    document.getElementById('roundScoreList').innerHTML = view.seats.map((s,i) =>
+      '<div class="srow" style="display:flex;justify-content:space-between;padding:3px 0;"><span>'+escapeText(s.name)+'</span><span>'+(view.scores?view.scores[i]:0)+'</span></div>'
+    ).join('');
+    const canControlNext = !(app.mode === 'online' && app.onlineRole === 'guest');
+    document.getElementById('btnNextRound').style.display = canControlNext ? '' : 'none';
+    overlay.classList.add('show');
+  }, wait);
 }
 
 function renderTable(view, eventText){
   if (!view) return;
   const isNewGameEvent = (eventText === 'Permainan dimulai!' || eventText === 'Ronde baru dimulai!');
+  if (isNewGameEvent) roundToken++;
   const priorActorIdx = lastTurnPlayerIdx;
   const priorDiscardCount = isNewGameEvent ? null : lastDiscardCount;
   lastDiscardCount = view.discardCount;
@@ -1375,6 +1389,7 @@ function backToMenu(){
   if (app.botTimer) { clearTimeout(app.botTimer); app.botTimer = null; }
   app.mode='offline'; app.onlineRole=null; app.seats=[]; app.localGame=null; app.gameStarted=false;
   handoffActive = false; pendingHandoffView = null; lastTurnPlayerIdx = null; selectedCombo = []; lastRenderedView = null; lastDiscardCount = null;
+  roundOverPending = false; roundToken++;
   document.getElementById('passOverlay').classList.remove('show');
   document.getElementById('turnToast').classList.remove('show');
   document.getElementById('onlineLobby').style.display='none';
