@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Studio Kuis</title>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1/dist/peerjs.min.js"></script>
+<style>
+  :root{
+    --bg1:#341466; --bg2:#5b2a9e; --bg3:#7c3aed;
+    --panel:#ffffff; --panel-2:#f5f3fb; --panel-3:#ece7f8;
+    --text:#221a34; --muted:#6b6280; --border:#e4defa;
+    --red:#e21b3c; --blue:#1368ce; --yellow:#eab308; --green:#26890c;
+    --brass:#c9a15a; --ok:#16a34a; --bad:#dc2626;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(circle at 50% -10%, var(--bg3), var(--bg2) 45%, var(--bg1) 100%);
+    min-height:100vh; color:var(--text);
+    display:flex; justify-content:center; padding:18px 12px 46px;
+  }
+  .app-wrap{width:100%; max-width:480px; display:flex; flex-direction:column; align-items:center; gap:14px;}
+  .hidden{display:none !important;}
+
+  .brand{text-align:center; color:#fff; margin-bottom:2px;}
+  .brand h1{font-size:30px; margin:0 0 4px; font-weight:800; letter-spacing:.3px; text-shadow:0 3px 10px rgba(0,0,0,.35);}
+  .brand p{margin:0; font-size:13px; opacity:.85;}
+
+  .card{background:var(--panel); border-radius:var(--radius); padding:18px; width:100%; box-shadow:0 12px 32px rgba(0,0,0,.28);}
+  .card h2{margin:0 0 4px; font-size:19px; font-weight:800;}
+  .card .sub{margin:0 0 14px; font-size:13px; color:var(--muted);}
+
+  .stack{display:flex; flex-direction:column; gap:10px;}
+
+  .menu-btn{display:flex; align-items:center; gap:12px; width:100%; padding:14px 14px; border-radius:14px; border:1px solid var(--border); background:var(--panel-2); cursor:pointer; text-align:left; font:inherit;}
+  .menu-btn:active{transform:scale(.98);}
+  .menu-btn .mi{flex:none; width:44px; height:44px; border-radius:13px; background:linear-gradient(135deg,var(--bg3),var(--bg2)); display:flex; align-items:center; justify-content:center;}
+  .menu-btn .mt{font-weight:700; font-size:15px;}
+  .menu-btn .md{font-size:12px; color:var(--muted); margin-top:1px;}
+
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field label{font-size:12px; font-weight:700; color:var(--muted);}
+  .field input{padding:12px 14px; border-radius:12px; border:1px solid var(--border); font-size:16px; background:var(--panel-2); color:var(--text); font:inherit;}
+  .field input:focus{outline:2px solid var(--bg3);}
+
+  .btn{padding:13px 16px; border-radius:12px; border:none; font-weight:800; font-size:15px; cursor:pointer; font:inherit; width:100%;}
+  .btn-primary{background:linear-gradient(135deg,var(--bg3),var(--bg2)); color:#fff; box-shadow:0 6px 16px rgba(91,42,158,.35);}
+  .btn-primary:disabled{opacity:.45; box-shadow:none;}
+  .btn-primary:active{transform:scale(.98);}
+  .btn-outline{background:#fff; color:var(--text); border:1.5px solid var(--border);}
+  .btn-outline:active{transform:scale(.98);}
+  .btn-danger{background:#fff; color:var(--bad); border:1.5px solid #fecaca;}
+  .btn-row{display:flex; gap:10px;}
+  .btn-row .btn{flex:1;}
+
+  .err-text{color:var(--bad); font-size:13px; min-height:16px; margin:2px 0 0;}
+  .busy-spinner{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:13px; justify-content:center; padding:6px 0;}
+  .spin{width:16px; height:16px; border-radius:50%; border:2px solid var(--border); border-top-color:var(--bg3); animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .exit-fab{position:fixed; top:14px; right:14px; width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,.35); color:#fff; border:none; font-size:16px; cursor:pointer; z-index:20;}
+
+  /* ---- room code ---- */
+  .room-code{display:flex; align-items:center; justify-content:center; gap:10px; background:var(--panel-3); border-radius:14px; padding:16px; margin-bottom:14px;}
+  .room-code .val{font-size:34px; font-weight:800; letter-spacing:6px; color:var(--bg1);}
+  .room-code .cp{border:none; background:var(--bg3); color:#fff; font-size:12px; font-weight:700; padding:8px 12px; border-radius:10px; cursor:pointer;}
+
+  /* ---- roster ---- */
+  .roster-row{display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:12px; background:var(--panel-2); margin-bottom:7px;}
+  .roster-row .ava{width:32px; height:32px; flex:none; display:flex; align-items:center; justify-content:center;}
+  .roster-row .ava svg{width:100%; height:100%; display:block;}
+  .roster-row .rn{flex:1; font-weight:700; font-size:14px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .roster-row .rn .me-tag{color:var(--muted); font-weight:500; font-size:12px;}
+  .roster-row .dot{width:8px; height:8px; border-radius:50%; background:var(--ok); flex:none;}
+  .roster-row.offline .dot{background:#d1d5db;}
+  .roster-row.offline{opacity:.55;}
+  .roster-empty{text-align:center; color:var(--muted); font-size:13px; padding:14px 0;}
+
+  /* ---- difficulty grid ---- */
+  .diff-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:6px;}
+  .diff-btn{border:none; border-radius:14px; padding:14px 10px; color:#fff; font-weight:800; cursor:pointer; font:inherit; display:flex; flex-direction:column; align-items:center; gap:4px; box-shadow:0 6px 14px rgba(0,0,0,.18);}
+  .diff-btn .di{font-size:24px;}
+  .diff-btn .dn{font-size:14px;}
+  .diff-btn .dc{font-size:11px; font-weight:600; opacity:.9;}
+  .diff-btn:disabled{opacity:.35; box-shadow:none;}
+  .diff-btn:active{transform:scale(.97);}
+  .diff-btn.extreme-span{grid-column:1 / span 2;}
+  .waiting-block{text-align:center; padding:30px 10px; color:var(--muted);}
+  .waiting-block .wi{display:flex; justify-content:center; margin-bottom:8px; animation:pulse 1.4s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.4;}}
+
+  /* ---- question header ---- */
+  .q-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .diff-badge{display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:20px; color:#fff; font-size:12px; font-weight:800;}
+  .q-num{font-size:12px; color:var(--muted); font-weight:700;}
+  .timer-wrap{display:flex; align-items:center; gap:8px;}
+  .timer-num{font-size:20px; font-weight:800; width:30px; text-align:center;}
+  .timer-track{flex:1; height:8px; border-radius:6px; background:var(--panel-3); overflow:hidden;}
+  .timer-fill{height:100%; background:linear-gradient(90deg,var(--green),var(--yellow),var(--red)); width:100%; transition:width .2s linear;}
+  .q-text{font-size:19px; font-weight:800; line-height:1.35; margin:6px 0 16px;}
+
+  .opt-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .opt-btn{position:relative; border:none; border-radius:14px; padding:16px 10px; color:#fff; font-weight:700; font-size:14.5px; text-align:left; display:flex; align-items:center; gap:8px; cursor:pointer; font:inherit; min-height:64px; box-shadow:0 6px 14px rgba(0,0,0,.18);}
+  .opt-btn .correct-check{position:absolute; top:-9px; right:-7px; width:24px; height:24px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,.3);}
+  .opt-btn .os{font-size:18px; flex:none;}
+  .opt-btn:disabled{cursor:default;}
+  .opt-btn.dim{opacity:.3;}
+  .opt-btn.picked{outline:3px solid #fff; box-shadow:0 0 0 4px rgba(255,255,255,.35);}
+  .opt-btn.correct-glow{outline:3px solid #fff; box-shadow:0 0 0 5px rgba(255,255,255,.55), 0 0 22px rgba(255,255,255,.7);}
+  .answer-lock-msg{text-align:center; font-size:13px; color:var(--muted); margin-top:12px;}
+  .answer-count-row{display:flex; align-items:center; justify-content:space-between; margin-top:14px; padding-top:12px; border-top:1px solid var(--border);}
+  .answer-count-row .ac{font-size:13px; color:var(--muted); font-weight:700;}
+
+  /* ---- distribution ---- */
+  .dist-row{display:flex; align-items:center; gap:8px; margin-bottom:7px;}
+  .dist-row .os{width:18px; flex:none; text-align:center;}
+  .dist-row .track{flex:1; height:22px; border-radius:7px; background:var(--panel-3); overflow:hidden; position:relative;}
+  .dist-row .fill{height:100%; border-radius:7px;}
+  .dist-row .cnt{width:28px; text-align:right; font-size:12px; font-weight:800; color:var(--muted);}
+
+  .result-banner{border-radius:14px; padding:14px; text-align:center; font-weight:800; font-size:15px; margin-bottom:14px; display:flex; align-items:center; justify-content:center; gap:8px;}
+  .result-banner.win{background:#dcfce7; color:var(--ok);}
+  .result-banner.lose{background:#fee2e2; color:var(--bad);}
+  .result-banner.none{background:var(--panel-3); color:var(--muted);}
+
+  /* ---- leaderboard ---- */
+  .board-title{font-size:13px; font-weight:800; color:var(--muted); margin:16px 0 8px; text-transform:uppercase; letter-spacing:.5px;}
+  .board-row{display:flex; align-items:center; gap:9px; padding:8px 9px; border-radius:12px; margin-bottom:6px; background:var(--panel-2);}
+  .board-row.me{background:#ede9fe; border:1.5px solid var(--bg3);}
+  .board-row .rk{width:22px; text-align:center; font-weight:800; font-size:13px; color:var(--muted); flex:none;}
+  .board-row .ava{width:28px; height:28px; flex:none;}
+  .board-row .ava svg{width:100%; height:100%; display:block;}
+  .board-row .nm{flex:1; font-weight:700; font-size:13.5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .board-row .sc{font-weight:800; font-size:13.5px; flex:none;}
+  .board-row .dl{display:inline-flex; align-items:center; justify-content:flex-end; gap:2px; font-size:11px; font-weight:800; flex:none; width:36px;}
+  .dl.up{color:var(--ok);} .dl.down{color:var(--bad);} .dl.new{color:var(--bg3);} .dl.same{color:var(--muted);}
+  .my-score-solo{text-align:center; padding:8px 0 4px;}
+  .my-score-solo .n{font-size:38px; font-weight:800; color:var(--bg1);}
+  .my-score-solo .l{font-size:12px; color:var(--muted); font-weight:700;}
+
+  /* ---- stage & character cards (kartu anime melompat ke panggung) ---- */
+  .stage{display:flex; align-items:flex-end; justify-content:center; gap:10px; margin-bottom:6px; padding-top:34px;}
+  .stage-col{display:flex; flex-direction:column; align-items:center; width:96px;}
+  @keyframes cardJumpIn{
+    0%{ transform:translateY(170px) scale(.5) rotate(-12deg); opacity:0; }
+    55%{ transform:translateY(-20px) scale(1.1) rotate(4deg); opacity:1; }
+    75%{ transform:translateY(6px) scale(.96) rotate(-2deg); }
+    100%{ transform:translateY(0) scale(1) rotate(0deg); }
+  }
+  @keyframes plinthPop{ 0%{ transform:scaleX(.7); opacity:.3; } 100%{ transform:scaleX(1); opacity:1; } }
+  .char-card{position:relative; width:96px; padding:16px 6px 10px; border-radius:16px; text-align:center; overflow:hidden;
+    box-shadow:0 10px 22px rgba(0,0,0,.35); animation:cardJumpIn .7s cubic-bezier(.34,1.56,.64,1) both;}
+  .char-card.rarity-gold{background:linear-gradient(160deg,#fde68a,#eab308); border:3px solid #fff6c8;}
+  .char-card.rarity-silver{background:linear-gradient(160deg,#e8edf3,#94a3b8); border:3px solid #f3f6fa;}
+  .char-card.rarity-bronze{background:linear-gradient(160deg,#eac09a,#c2703d); border:3px solid #f8e2cb;}
+  .char-card.rarity-purple{background:linear-gradient(160deg,#c9bcfb,#7c3aed); border:3px solid #ede9fe;}
+  .char-card .cc-badge{position:absolute; top:-13px; left:50%; transform:translateX(-50%); z-index:2; filter:drop-shadow(0 3px 4px rgba(0,0,0,.3));}
+  .char-card .cc-sparkle{position:absolute; inset:0;}
+  .char-card .cc-avatar{width:58px; height:58px; margin:8px auto 6px; position:relative; z-index:1; filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));}
+  .char-card .cc-name{font-size:12px; font-weight:800; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.45); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; position:relative; z-index:1;}
+  .char-card .cc-score{font-size:11px; font-weight:700; color:rgba(255,255,255,.92); position:relative; z-index:1;}
+  .plinth{width:88px; border-radius:10px 10px 4px 4px; margin-top:9px; display:flex; align-items:center; justify-content:center; font-weight:800; color:rgba(255,255,255,.85); font-size:13px; transform-origin:bottom; animation:plinthPop .4s ease-out both;}
+  .plinth-1{height:56px; background:linear-gradient(180deg,#eab308,#a16207);}
+  .plinth-2{height:40px; background:linear-gradient(180deg,#c3cad4,#64748b);}
+  .plinth-3{height:28px; background:linear-gradient(180deg,#d99566,#8a4b25);}
+  .stage-empty{width:96px; height:58px;}
+  .stage-col.col2{ order:1; } .stage-col.col1{ order:2; } .stage-col.col3{ order:3; }
+
+  .toast{position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(20px); background:#111; color:#fff; padding:10px 18px; border-radius:30px; font-size:13px; font-weight:700; opacity:0; transition:opacity .25s, transform .25s; z-index:30; pointer-events:none; max-width:88vw; text-align:center;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<button class="exit-fab hidden" id="btnExit"></button>
+<div class="app-wrap">
+  <div class="brand" id="brandHead">
+    <h1>Studio Kuis</h1>
+    <p>Kuis interaktif ala Kahoot &middot; 45 soal &middot; 5 tingkat kesulitan</p>
+  </div>
+
+  <!-- ===== MENU ===== -->
+  <div class="card" id="menuCard">
+    <div class="stack">
+      <button class="menu-btn" id="btnSolo"><span class="mi" data-icon="flask"></span><span><span class="mt">Latihan Sendiri</span><br><span class="md">Main solo, pilih kesulitan sendiri</span></span></button>
+      <button class="menu-btn" id="btnGoHost"><span class="mi" data-icon="crown"></span><span><span class="mt">Jadi Host</span><br><span class="md">Buat room &amp; undang teman</span></span></button>
+      <button class="menu-btn" id="btnGoJoin"><span class="mi" data-icon="handRaise"></span><span><span class="mt">Gabung sebagai Pemain</span><br><span class="md">Masuk pakai kode room</span></span></button>
+    </div>
+  </div>
+
+  <!-- ===== ENTRY (host/join name+code) ===== -->
+  <div class="card hidden" id="entryCard">
+    <h2 id="entryTitle">Buat Room</h2>
+    <p class="sub" id="entrySub">Isi nama kamu untuk mulai.</p>
+    <div class="stack">
+      <div class="field"><label>Nama Kamu</label><input id="nameInput" maxlength="16" placeholder="Contoh: Rudi"></div>
+      <div class="field hidden" id="codeFieldWrap"><label>Kode Room</label><input id="codeInput" maxlength="6" placeholder="Contoh: AB3XZ" style="text-transform:uppercase;"></div>
+      <div class="busy-spinner hidden" id="entryBusy"><span class="spin"></span><span>Menghubungkan...</span></div>
+      <p class="err-text" id="entryError"></p>
+      <button class="btn btn-primary" id="btnEntrySubmit">Lanjut</button>
+      <button class="btn btn-outline" id="btnEntryBack">Kembali</button>
+    </div>
+  </div>
+
+  <!-- ===== LOBBY ===== -->
+  <div class="card hidden" id="lobbyCard">
+    <div class="room-code hidden" id="roomCodeWrap">
+      <div><div class="val" id="roomCodeVal">-----</div></div>
+      <button class="cp" id="btnCopyCode">Salin</button>
+    </div>
+    <h2>Ruang Tunggu</h2>
+    <p class="sub" id="lobbySub">Menunggu pemain bergabung&hellip;</p>
+    <div id="rosterWrap"></div>
+    <button class="btn btn-primary hidden" id="btnStartQuiz" style="margin-top:8px;">Mulai Kuis</button>
+    <p class="answer-lock-msg hidden" id="guestWaitingMsg">Menunggu host memulai kuis&hellip;</p>
+  </div>
+
+  <!-- ===== DIFFICULTY SELECT ===== -->
+  <div class="card hidden" id="diffCard">
+    <h2 id="diffTitle">Pilih Soal</h2>
+    <p class="sub" id="diffSub">Host memilih tingkat kesulitan.</p>
+    <div class="diff-grid" id="diffGrid"></div>
+    <p class="err-text" id="diffError"></p>
+    <div id="exhaustedBlock" class="hidden" style="text-align:center; padding:10px 0;">
+      <p class="sub" style="margin-bottom:10px;">Semua 45 soal sudah dipakai!</p>
+      <button class="btn btn-outline" id="btnResetPools">Acak Ulang Semua Soal</button>
+    </div>
+    <div id="waitingForHostBlock" class="waiting-block hidden">
+      <div class="wi" id="waitingIcon"></div>
+      <div>Host sedang memilih soal berikutnya&hellip;</div>
+    </div>
+    <div id="diffBoardWrap"></div>
+    <div class="btn-row" id="hostEndRow" style="margin-top:12px;">
+      <button class="btn btn-danger hidden" id="btnEndQuiz">Akhiri Kuis</button>
+    </div>
+  </div>
+
+  <!-- ===== QUESTION ===== -->
+  <div class="card hidden" id="questionCard">
+    <div class="q-head">
+      <span class="diff-badge" id="qDiffBadge">Normal</span>
+      <span class="q-num" id="qNumLabel">Soal 1</span>
+    </div>
+    <div class="timer-wrap" style="margin-bottom:10px;">
+      <div class="timer-num" id="qTimerNum">20</div>
+      <div class="timer-track"><div class="timer-fill" id="qTimerFill"></div></div>
+    </div>
+    <div class="q-text" id="qText">Pertanyaan&hellip;</div>
+    <div class="opt-grid" id="qOptGrid"></div>
+    <p class="answer-lock-msg hidden" id="qLockMsg">Terkirim! Menunggu waktu habis&hellip;</p>
+    <div class="answer-count-row hidden" id="qHostRow">
+      <span class="ac" id="qAnsCount">0/0 sudah menjawab</span>
+      <button class="btn btn-outline" id="btnForceReveal" style="width:auto; padding:9px 14px;">Selesaikan Sekarang</button>
+    </div>
+  </div>
+
+  <!-- ===== REVEAL ===== -->
+  <div class="card hidden" id="revealCard">
+    <div class="q-head">
+      <span class="diff-badge" id="rvDiffBadge">Normal</span>
+      <span class="q-num" id="rvNumLabel">Soal 1</span>
+    </div>
+    <div class="q-text" id="rvText" style="font-size:16px;"></div>
+    <div id="rvOptGrid" class="opt-grid" style="margin-bottom:14px;"></div>
+    <div id="rvDistWrap"></div>
+    <div id="rvResultBanner" class="result-banner none">-</div>
+    <div id="rvBoardArea"></div>
+    <div class="btn-row" style="margin-top:6px;">
+      <button class="btn btn-primary hidden" id="btnNextRound">Lanjut ke Soal Berikutnya</button>
+      <button class="btn btn-danger hidden" id="btnEndQuiz2" style="max-width:120px;">Akhiri</button>
+    </div>
+  </div>
+
+  <!-- ===== GAME OVER ===== -->
+  <div class="card hidden" id="gameOverCard">
+    <h2 style="display:flex; align-items:center; gap:8px;"><span id="goTrophyIcon"></span>Kuis Selesai!</h2>
+    <p class="sub" id="goSub">Berikut hasil akhirnya.</p>
+    <div id="goPodiumArea"></div>
+    <div id="goBoardArea"></div>
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn btn-primary hidden" id="btnPlayAgain">Main Lagi</button>
+      <button class="btn btn-outline" id="btnBackMenu">Kembali ke Menu</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+(function(){
+
+/* ============================= CONSTANTS ============================= */
+var DIFFICULTIES = ['soeasy','easy','normal','hard','extreme'];
+var DIFF_LABEL = { soeasy:'So Easy', easy:'Easy', normal:'Normal', hard:'Hard', extreme:'Extreme' };
+var DIFF_ICON  = { soeasy:'leaf', easy:'smile', normal:'scale', hard:'flame', extreme:'skull' };
+var DIFF_COLOR = { soeasy:'#2dd4bf', easy:'#22c55e', normal:'#3b82f6', hard:'#f97316', extreme:'#ef4444' };
+var DIFF_BASE_POINTS = { soeasy:300, easy:500, normal:750, hard:1000, extreme:1500 };
+var DIFF_TIME_LIMIT  = { soeasy:10, easy:15, normal:20, hard:25, extreme:30 };
+var OPTION_COLORS = ['#e21b3c','#1368ce','#ca8a04','#26890c'];
+var OPTION_ICON_NAMES = ['triangleShape','diamondShape','circleShape','squareShape'];
+
+var QUESTION_BANK = [
+  { id:1, difficulty:'soeasy', q:'Hasil dari 2 + 2 adalah?', options:['3','4','5','6'], correct:1 },
+  { id:2, difficulty:'soeasy', q:'Warna daun yang masih segar biasanya?', options:['Merah','Hijau','Ungu','Hitam'], correct:1 },
+  { id:3, difficulty:'soeasy', q:'Hewan yang dikenal sebagai "raja hutan" adalah?', options:['Harimau','Singa','Gorila','Serigala'], correct:1 },
+  { id:4, difficulty:'soeasy', q:'Satu minggu terdiri dari berapa hari?', options:['5','6','7','8'], correct:2 },
+  { id:5, difficulty:'soeasy', q:'Ibu kota Indonesia adalah?', options:['Bandung','Surabaya','Jakarta','Medan'], correct:2 },
+  { id:6, difficulty:'soeasy', q:'Air yang dibekukan akan berubah menjadi?', options:['Uap','Es','Minyak','Garam'], correct:1 },
+  { id:7, difficulty:'soeasy', q:'Bangun datar dengan 3 sisi disebut?', options:['Segiempat','Segitiga','Lingkaran','Segilima'], correct:1 },
+  { id:8, difficulty:'soeasy', q:'Matahari terbit dari arah?', options:['Barat','Utara','Selatan','Timur'], correct:3 },
+  { id:9, difficulty:'soeasy', q:'Hewan yang biasa berkokok saat pagi adalah?', options:['Bebek','Ayam','Kambing','Kucing'], correct:1 },
+
+  { id:10, difficulty:'easy', q:'Planet yang paling dekat dengan Matahari adalah?', options:['Venus','Bumi','Merkurius','Mars'], correct:2 },
+  { id:11, difficulty:'easy', q:'Benua terbesar di dunia adalah?', options:['Afrika','Asia','Eropa','Amerika'], correct:1 },
+  { id:12, difficulty:'easy', q:'Alat musik tradisional Jawa berupa gong &amp; kenong disebut?', options:['Angklung','Gamelan','Sasando','Kolintang'], correct:1 },
+  { id:13, difficulty:'easy', q:'Proses tumbuhan mengubah cahaya matahari jadi energi disebut?', options:['Respirasi','Fotosintesis','Fermentasi','Evaporasi'], correct:1 },
+  { id:14, difficulty:'easy', q:'Jumlah sisi pada bangun kubus adalah?', options:['4','6','8','10'], correct:1 },
+  { id:15, difficulty:'easy', q:'Samudra terbesar di dunia adalah?', options:['Atlantik','Hindia','Pasifik','Arktik'], correct:2 },
+  { id:16, difficulty:'easy', q:'Bahasa resmi yang digunakan di Indonesia adalah?', options:['Melayu','Sunda','Indonesia','Jawa'], correct:2 },
+  { id:17, difficulty:'easy', q:'Hewan mamalia terbesar di dunia adalah?', options:['Gajah','Paus Biru','Jerapah','Badak'], correct:1 },
+  { id:18, difficulty:'easy', q:'Organ tubuh yang berfungsi memompa darah adalah?', options:['Paru-paru','Hati','Jantung','Ginjal'], correct:2 },
+
+  { id:19, difficulty:'normal', q:'Penemu lampu pijar yang terkenal adalah?', options:['Nikola Tesla','Thomas Edison','Alexander Graham Bell','Isaac Newton'], correct:1 },
+  { id:20, difficulty:'normal', q:'Proklamasi kemerdekaan Indonesia dibacakan pada tanggal?', options:['17 Agustus 1945','20 Mei 1945','10 November 1945','28 Oktober 1928'], correct:0 },
+  { id:21, difficulty:'normal', q:'Gas paling banyak menyusun atmosfer Bumi adalah?', options:['Oksigen','Karbon dioksida','Nitrogen','Hidrogen'], correct:2 },
+  { id:22, difficulty:'normal', q:'Candi Buddha terbesar di dunia yang terletak di Indonesia adalah?', options:['Prambanan','Borobudur','Mendut','Kalasan'], correct:1 },
+  { id:23, difficulty:'normal', q:'Ibu kota Jepang adalah?', options:['Osaka','Kyoto','Tokyo','Nagoya'], correct:2 },
+  { id:24, difficulty:'normal', q:'Satuan dasar untuk mengukur arus listrik adalah?', options:['Volt','Ampere','Watt','Ohm'], correct:1 },
+  { id:25, difficulty:'normal', q:'Penulis novel "Laskar Pelangi" adalah?', options:['Pramoedya Ananta Toer','Andrea Hirata','Tere Liye','Ahmad Tohari'], correct:1 },
+  { id:26, difficulty:'normal', q:'Danau terbesar di Indonesia adalah?', options:['Danau Sentani','Danau Toba','Danau Poso','Danau Singkarak'], correct:1 },
+  { id:27, difficulty:'normal', q:'Sungai yang umum dikenal sebagai sungai terpanjang di dunia adalah?', options:['Amazon','Nil','Yangtze','Mississippi'], correct:1 },
+
+  { id:28, difficulty:'hard', q:'Elemen dengan nomor atom 1 dalam tabel periodik adalah?', options:['Helium','Hidrogen','Litium','Oksigen'], correct:1 },
+  { id:29, difficulty:'hard', q:'Perjanjian yang mengakhiri Perang Dunia I adalah?', options:['Perjanjian Versailles','Perjanjian Potsdam','Perjanjian Paris','Perjanjian Roma'], correct:0 },
+  { id:30, difficulty:'hard', q:'Kitab suci umat Hindu yang tertua disebut?', options:['Bhagavad Gita','Weda','Mahabharata','Ramayana'], correct:1 },
+  { id:31, difficulty:'hard', q:'Bagian mata yang mengatur banyaknya cahaya yang masuk adalah?', options:['Retina','Iris','Kornea','Pupil'], correct:1 },
+  { id:32, difficulty:'hard', q:'Mata uang resmi negara Jepang adalah?', options:['Won','Yuan','Yen','Ringgit'], correct:2 },
+  { id:33, difficulty:'hard', q:'Penemu teori relativitas adalah?', options:['Isaac Newton','Albert Einstein','Niels Bohr','Stephen Hawking'], correct:1 },
+  { id:34, difficulty:'hard', q:'Ibu kota negara Australia adalah?', options:['Sydney','Melbourne','Canberra','Perth'], correct:2 },
+  { id:35, difficulty:'hard', q:'Organ tubuh yang menyaring darah dan menghasilkan urine adalah?', options:['Hati','Ginjal','Limpa','Pankreas'], correct:1 },
+  { id:36, difficulty:'hard', q:'Kerajaan maritim terkenal di Nusantara abad ke-7 berpusat di Sumatra adalah?', options:['Majapahit','Sriwijaya','Mataram','Demak'], correct:1 },
+
+  { id:37, difficulty:'extreme', q:'Unsur kimia dengan simbol "Au" adalah?', options:['Perak','Emas','Aluminium','Argon'], correct:1 },
+  { id:38, difficulty:'extreme', q:'Penulis novel "Bumi Manusia" adalah?', options:['Andrea Hirata','Pramoedya Ananta Toer','Chairil Anwar','Sutan Takdir Alisjahbana'], correct:1 },
+  { id:39, difficulty:'extreme', q:'Jumlah kaki yang dimiliki laba-laba pada umumnya adalah?', options:['6','8','10','12'], correct:1 },
+  { id:40, difficulty:'extreme', q:'Wright bersaudara dikenal karena menjadi orang pertama yang berhasil melakukan?', options:['Menyeberangi Atlantik dengan pesawat','Penerbangan bertenaga mesin yang terkendali','Membuat balon udara','Menciptakan helikopter'], correct:1 },
+  { id:41, difficulty:'extreme', q:'Dalam mitologi Yunani, dewa laut bernama?', options:['Zeus','Ares','Poseidon','Hades'], correct:2 },
+  { id:42, difficulty:'extreme', q:'Selain Radium, unsur radioaktif yang ditemukan Marie Curie bersama suaminya adalah?', options:['Uranium','Polonium','Plutonium','Thorium'], correct:1 },
+  { id:43, difficulty:'extreme', q:'Penulis teori evolusi melalui seleksi alam adalah?', options:['Charles Darwin','Gregor Mendel','Louis Pasteur','Carl Linnaeus'], correct:0 },
+  { id:44, difficulty:'extreme', q:'Ibu kota Kekaisaran Romawi Timur (Bizantium) adalah?', options:['Roma','Athena','Konstantinopel','Alexandria'], correct:2 },
+  { id:45, difficulty:'extreme', q:'Gunung berapi yang meletus dahsyat tahun 1883 hingga terdengar ribuan kilometer adalah?', options:['Gunung Merapi','Gunung Krakatau','Gunung Tambora','Gunung Bromo'], correct:1 }
+];
+
+/* ============================= UTIL ============================= */
+function shuffle(arr){ var a=arr.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function escapeText(s){ var d=document.createElement('div'); d.textContent = (s==null?'':String(s)); return d.innerHTML; }
+function randId(){ return 'p'+Math.random().toString(36).slice(2,10); }
+function clamp01(n){ return Math.max(0, Math.min(1, n)); }
+
+/* ============================= AVATAR (karakter kartun kecil) ============================= */
+var AVATAR_PALETTE = ['#ff6b6b','#4ecdc4','#f6c445','#8f7cf0','#ff9f43','#2fbf7e','#54a0ff','#ff6bb0'];
+function avatarFace(eyeY, mouthPath){
+  return '<circle cx="15" cy="'+eyeY+'" r="4.1" fill="#fff"/><circle cx="25" cy="'+eyeY+'" r="4.1" fill="#fff"/>' +
+    '<circle cx="16" cy="'+(eyeY+0.6)+'" r="2" fill="#20180a"/><circle cx="24" cy="'+(eyeY+0.6)+'" r="2" fill="#20180a"/>' +
+    (mouthPath||'');
+}
+function avatarSVG(seedIndex, size){
+  size = size || 32;
+  var variant = ((seedIndex%8)+8)%8;
+  var color = AVATAR_PALETTE[variant];
+  var body, eyeY;
+  switch(variant){
+    case 0: body='<path d="M20,5 L23.5,12 L16.5,12 Z" fill="'+color+'"/><circle cx="20" cy="23" r="14" fill="'+color+'"/>'; eyeY=21; break;
+    case 1: body='<path d="M9,9 L17,16 L9,20 Z" fill="'+color+'"/><path d="M31,9 L23,16 L31,20 Z" fill="'+color+'"/><circle cx="20" cy="24" r="13" fill="'+color+'"/>'; eyeY=22; break;
+    case 2: body='<line x1="9" y1="8" x2="13" y2="14" stroke="'+color+'" stroke-width="3" stroke-linecap="round"/><line x1="31" y1="8" x2="27" y2="14" stroke="'+color+'" stroke-width="3" stroke-linecap="round"/><ellipse cx="20" cy="21" rx="12" ry="15" fill="'+color+'"/>'; eyeY=19; break;
+    case 3: body='<path d="M20,4 L24,15 L36,15 L26,23 L30,35 L20,27 L10,35 L14,23 L4,15 L16,15 Z" fill="'+color+'"/>'; eyeY=19; break;
+    case 4: body='<circle cx="11" cy="25" r="8.5" fill="'+color+'"/><circle cx="20" cy="18" r="10.5" fill="'+color+'"/><circle cx="29" cy="25" r="8.5" fill="'+color+'"/><rect x="8" y="23" width="24" height="11" rx="5.5" fill="'+color+'"/>'; eyeY=20; break;
+    case 5: body='<rect x="9" y="9" width="22" height="22" rx="4" fill="'+color+'" transform="rotate(45 20 20)"/>'; eyeY=20; break;
+    case 6: body='<path d="M8,34 V18 a12,12 0 0,1 24,0 V34 l-4,-4 -4,4 -4,-4 -4,4 -4,-4 Z" fill="'+color+'"/>'; eyeY=17; break;
+    default: body='<circle cx="9" cy="14" r="3.4" fill="'+color+'"/><circle cx="31" cy="14" r="3.4" fill="'+color+'"/><circle cx="20" cy="23" r="13" fill="'+color+'"/>'; eyeY=21; break;
+  }
+  var face = avatarFace(eyeY, '<path d="M15,'+(eyeY+8)+' Q20,'+(eyeY+12)+' 25,'+(eyeY+8)+'" stroke="#20180a" stroke-width="1.6" fill="none" stroke-linecap="round"/>');
+  return '<svg viewBox="0 0 40 40" width="'+size+'" height="'+size+'">'+body+face+'</svg>';
+}
+
+/* ============================= ICON LIBRARY (full SVG, no emoji) ============================= */
+var ICON_PATHS = {
+  flask: '<path d="M9 2v6.7L4.6 16.8A2.2 2.2 0 0 0 6.5 20h11a2.2 2.2 0 0 0 1.9-3.2L15 8.7V2" fill="none" stroke="{c}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><path d="M7.2 2h9.6" stroke="{c}" stroke-width="1.8" stroke-linecap="round"/><path d="M7.6 14.5h8.8" stroke="{c}" stroke-width="1.5"/>',
+  crown: '<path d="M3 8.5l4 2.8L12 4l5 7.3 4-2.8-2 9.5H5Z" fill="{c}"/><rect x="4.3" y="18" width="15.4" height="2" rx="1" fill="{c}"/>',
+  handRaise: '<path d="M8.3 21v-8.3a1.5 1.5 0 0 1 3 0V15" stroke="{c}" stroke-width="1.7" fill="none" stroke-linecap="round"/><path d="M11.3 15v-9a1.5 1.5 0 0 1 3 0v7.2" stroke="{c}" stroke-width="1.7" fill="none" stroke-linecap="round"/><path d="M14.3 13.2V11a1.5 1.5 0 0 1 3 0v3.3" stroke="{c}" stroke-width="1.7" fill="none" stroke-linecap="round"/><path d="M8.5 13.6 6.4 11.5a1.4 1.4 0 0 0-2 2l4.6 4.9A4 4 0 0 0 12 20h3a4 4 0 0 0 4-4v-1.3" stroke="{c}" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  leaf: '<path d="M4.5 19.5c7.5 1 14-4 15-15-10.5 0-15 6.5-15 15Z" fill="{c}"/><path d="M5.5 18.5c3-4 6.5-7.5 12-11" stroke="rgba(255,255,255,.5)" stroke-width="1.2" fill="none" stroke-linecap="round"/>',
+  smile: '<circle cx="12" cy="12" r="9.5" fill="{c}"/><circle cx="8.6" cy="10.2" r="1.3" fill="#20180a"/><circle cx="15.4" cy="10.2" r="1.3" fill="#20180a"/><path d="M7.8 14c1.4 2.1 7 2.1 8.4 0" stroke="#20180a" stroke-width="1.5" fill="none" stroke-linecap="round"/>',
+  scale: '<path d="M12 3v15.3M7.2 18.3h9.6" stroke="{c}" stroke-width="1.8" stroke-linecap="round"/><path d="M4 8l3.6-3.6L11.2 8" stroke="{c}" stroke-width="1.5" fill="none" stroke-linejoin="round"/><path d="M12.8 8l3.6-3.6L20 8" stroke="{c}" stroke-width="1.5" fill="none" stroke-linejoin="round"/><path d="M2.3 8a3.05 3.05 0 0 0 5.4 0Z" fill="{c}"/><path d="M15.9 8a3.05 3.05 0 0 0 5.4 0Z" fill="{c}"/>',
+  flame: '<path d="M12 2.2c1.1 3-2.7 4.2-2.7 7.6A3.4 3.4 0 0 0 12 13a3.4 3.4 0 0 0 2.9-5.2c1.7 1.5 2.9 3.7 2.9 6a5.8 5.8 0 1 1-11.6 0c0-4 3-7 3-8.2 0 1.4.8 2 1.5 1.6C10.1 5.7 11 4 12 2.2Z" fill="{c}"/>',
+  skull: '<path d="M12 2.3a7.8 7.8 0 0 0-7.8 7.8c0 2.9 1.4 4.6 2.4 5.8v2.9a1 1 0 0 0 1 1H9.9v-1.9h1v1.9h2.2v-1.9h1v1.9h2.3a1 1 0 0 0 1-1v-2.9c1-1.2 2.4-2.9 2.4-5.8A7.8 7.8 0 0 0 12 2.3Z" fill="{c}"/><circle cx="9.1" cy="10.8" r="1.5" fill="#20180a"/><circle cx="14.9" cy="10.8" r="1.5" fill="#20180a"/>',
+  hourglass: '<path d="M6.5 2.5h11M6.5 21.5h11M7.3 2.5c0 5 4 6 4.7 7.5-.7 1.5-4.7 2.5-4.7 7.5M16.7 2.5c0 5-4 6-4.7 7.5.7 1.5 4.7 2.5 4.7 7.5" stroke="{c}" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  trophy: '<path d="M7.3 4h9.4v4.2a4.7 4.7 0 0 1-9.4 0Z" fill="{c}"/><path d="M7.3 5H4.6v1.8a2.9 2.9 0 0 0 2.9 2.9M16.7 5h2.7v1.8a2.9 2.9 0 0 1-2.9 2.9" stroke="{c}" stroke-width="1.5" fill="none" stroke-linecap="round"/><rect x="10.3" y="13.6" width="3.4" height="3" fill="{c}"/><rect x="7.3" y="18.4" width="9.4" height="2" rx="1" fill="{c}"/>',
+  checkCircle: '<circle cx="12" cy="12" r="10" fill="{c}"/><path d="M7.3 12.3l3.1 3.1L17 8.7" stroke="#fff" stroke-width="2.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  crossCircle: '<circle cx="12" cy="12" r="10" fill="{c}"/><path d="M8.6 8.6l6.8 6.8M15.4 8.6l-6.8 6.8" stroke="#fff" stroke-width="2.1" stroke-linecap="round"/>',
+  check: '<path d="M4 12.8l4.8 4.8L20 6" stroke="{c}" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  close: '<path d="M5.5 5.5l13 13M18.5 5.5l-13 13" stroke="{c}" stroke-width="2.1" stroke-linecap="round"/>',
+  arrowUp: '<path d="M12 5.3l7 9.4H5Z" fill="{c}"/>',
+  arrowDown: '<path d="M12 18.7l-7-9.4h14Z" fill="{c}"/>',
+  dash: '<rect x="5" y="10.8" width="14" height="2.4" rx="1.2" fill="{c}"/>',
+  triangleShape: '<polygon points="12,4 21,20 3,20" fill="{c}"/>',
+  diamondShape: '<polygon points="12,3 21,12 12,21 3,12" fill="{c}"/>',
+  circleShape: '<circle cx="12" cy="12" r="9" fill="{c}"/>',
+  squareShape: '<rect x="4" y="4" width="16" height="16" rx="3" fill="{c}"/>'
+};
+function iconSVG(name, size, color){
+  size = size || 20; color = color || 'currentColor';
+  var raw = ICON_PATHS[name] || '';
+  var body = raw.split('{c}').join(color);
+  return '<svg viewBox="0 0 24 24" width="'+size+'" height="'+size+'" style="display:block;">'+body+'</svg>';
+}
+function medalBadgeSVG(rank, size){
+  size = size || 32;
+  var color = rank===1 ? '#eab308' : (rank===2 ? '#94a3b8' : '#c2703d');
+  return '<svg viewBox="0 0 40 44" width="'+size+'" height="'+(size*44/40)+'">' +
+    '<path d="M14 4h12l-4 15h-4Z" fill="'+color+'"/>' +
+    '<circle cx="20" cy="27" r="13" fill="'+color+'" stroke="#fff" stroke-width="2.2"/>' +
+    '<text x="20" y="32" font-size="14" font-weight="800" fill="#fff" text-anchor="middle" font-family="inherit">'+rank+'</text>' +
+    '</svg>';
+}
+function sparkleSVG(){
+  return '<svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" style="position:absolute; inset:0; opacity:.3;">' +
+    '<path d="M50 6 L57 42 L92 49 L57 56 L50 92 L43 56 L8 49 L43 42 Z" fill="#fff"/>' +
+    '</svg>';
+}
+function characterCardHTML(seedIndex, name, score, rank, delay){
+  var rarity = rank===1 ? 'gold' : (rank===2 ? 'silver' : (rank===3 ? 'bronze' : 'purple'));
+  return '<div class="char-card rarity-'+rarity+'" style="animation-delay:'+(delay||0)+'s;">' +
+    '<div class="cc-badge">'+medalBadgeSVG(rank,26)+'</div>' +
+    '<div class="cc-sparkle">'+sparkleSVG()+'</div>' +
+    '<div class="cc-avatar">'+avatarSVG(seedIndex,58)+'</div>' +
+    '<div class="cc-name">'+escapeText(name)+'</div>' +
+    '<div class="cc-score">'+score+' pts</div>' +
+  '</div>';
+}
+
+/* ============================= QUIZ ENGINE (authoritative) ============================= */
+function makePools(){
+  var pools = {};
+  for (var i=0;i<DIFFICULTIES.length;i++){
+    var d = DIFFICULTIES[i];
+    pools[d] = shuffle(QUESTION_BANK.filter(function(q){ return q.difficulty===d; }));
+  }
+  return pools;
+}
+
+function QuizEngine(){
+  this.pools = makePools();
+  this.players = [];
+  this.phase = 'lobby';
+  this.questionNumber = 0;
+  this.currentQuestion = null;
+  this.lastReveal = null;
+}
+QuizEngine.prototype.remaining = function(diff){ return this.pools[diff].length; };
+QuizEngine.prototype.allExhausted = function(){
+  for (var i=0;i<DIFFICULTIES.length;i++){ if (this.pools[DIFFICULTIES[i]].length>0) return false; }
+  return true;
+};
+QuizEngine.prototype.resetAllPools = function(){ this.pools = makePools(); };
+QuizEngine.prototype.addPlayer = function(id, name){
+  var p = null;
+  for (var i=0;i<this.players.length;i++){ if (this.players[i].id===id) { p=this.players[i]; break; } }
+  if (p) { p.connected = true; p.name = name || p.name; return p; }
+  p = { id:id, name:name, score:0, lastRank:null, connected:true };
+  this.players.push(p);
+  return p;
+};
+QuizEngine.prototype.removePlayer = function(id){
+  for (var i=0;i<this.players.length;i++){ if (this.players[i].id===id) { this.players[i].connected=false; break; } }
+};
+QuizEngine.prototype.connectedCount = function(){
+  var n=0; for (var i=0;i<this.players.length;i++){ if (this.players[i].connected!==false) n++; } return n;
+};
+QuizEngine.prototype.startQuestion = function(diff){
+  var pool = this.pools[diff];
+  if (!pool || !pool.length) throw new Error('empty pool');
+  var qData = pool.pop();
+  this.questionNumber++;
+  var now = Date.now();
+  var limitMs = DIFF_TIME_LIMIT[diff]*1000;
+  this.currentQuestion = { qData:qData, startedAt:now, endsAt: now+limitMs, answers:{} };
+  this.phase = 'question';
+  return this.currentQuestion;
+};
+QuizEngine.prototype.answeredCount = function(){
+  return this.currentQuestion ? Object.keys(this.currentQuestion.answers).length : 0;
+};
+QuizEngine.prototype.submitAnswer = function(playerId, optionIndex){
+  var cq = this.currentQuestion;
+  if (!cq) return null;
+  if (cq.answers[playerId]) return cq.answers[playerId];
+  var now = Date.now();
+  var late = now > cq.endsAt;
+  var correct = !late && optionIndex === cq.qData.correct;
+  var points = 0;
+  if (correct) {
+    var ratio = clamp01((cq.endsAt-now)/(cq.endsAt-cq.startedAt));
+    points = Math.round(DIFF_BASE_POINTS[cq.qData.difficulty]*(0.5+0.5*ratio));
+  }
+  var result = { optionIndex: late?null:optionIndex, correct:correct, points:points, late:late };
+  cq.answers[playerId] = result;
+  for (var i=0;i<this.players.length;i++){ if (this.players[i].id===playerId) { this.players[i].score += points; break; } }
+  return result;
+};
+QuizEngine.prototype.topSnapshot = function(){
+  var sorted = this.players.slice().sort(function(a,b){ return b.score-a.score; });
+  return sorted.slice(0,16).map(function(p,i){ return { id:p.id, name:p.name, score:p.score, rank:i+1, prevRank:p.lastRank, connected:p.connected!==false }; });
+};
+QuizEngine.prototype.reveal = function(){
+  var cq = this.currentQuestion;
+  var distribution = [0,0,0,0];
+  if (cq) {
+    var keys = Object.keys(cq.answers);
+    for (var i=0;i<keys.length;i++){ var a = cq.answers[keys[i]]; if (a.optionIndex!=null) distribution[a.optionIndex]++; }
+  }
+  var sorted = this.players.slice().sort(function(a,b){ return b.score-a.score; });
+  for (i=0;i<sorted.length;i++){ sorted[i].rank = i+1; }
+  var leaderboard = sorted.slice(0,16).map(function(p){ return { id:p.id, name:p.name, score:p.score, rank:p.rank, prevRank:p.lastRank, connected:p.connected!==false }; });
+  for (i=0;i<sorted.length;i++){ sorted[i].lastRank = sorted[i].rank; }
+  this.lastReveal = {
+    correctIndex: cq ? cq.qData.correct : null,
+    distribution: distribution,
+    leaderboard: leaderboard,
+    totalPlayers: this.players.length,
+    difficulty: cq ? cq.qData.difficulty : null,
+    questionText: cq ? cq.qData.q : null,
+    options: cq ? cq.qData.options : null,
+    questionNumber: this.questionNumber
+  };
+  this.phase = 'reveal';
+  return this.lastReveal;
+};
+
+/* ============================= APP STATE ============================= */
+var app = {
+  mode: null,           // 'solo' | 'host' | 'guest'
+  engine: null,         // QuizEngine (solo & host)
+  myId: null,
+  myName: '',
+  soloPlayerId: null,
+  hostConn: null,       // for guest: connection to host
+  guestConns: [],       // for host: [{id, conn}]
+  lastReceivedState: null, // for guest
+  peer: null
+};
+var ROOM_PREFIX = 'studiokuis-';
+var CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function genRoomCode(len){ len=len||5; var s=''; for(var i=0;i<len;i++) s+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]; return s; }
+function randomDefaultName(){ return 'Pemain'+Math.floor(10+Math.random()*90); }
+function peerAvailable(){ return typeof Peer !== 'undefined'; }
+var NO_INTERNET_MSG = 'Main online butuh koneksi internet.';
+var currentRoomCode = '';
+var countdownTicker = null;
+var autoRevealTimer = null;
+var toastTimer = null;
+
+function sendTo(conn, msg){ try{ conn.send(msg); }catch(e){} }
+function showToast(text){
+  var el = document.getElementById('toast');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2000);
+}
+
+/* ============================= HOST-SIDE STATE BUILDER ============================= */
+function buildPublicState(forPlayerId){
+  var e = app.engine;
+  var poolCounts = {};
+  for (var i=0;i<DIFFICULTIES.length;i++){ poolCounts[DIFFICULTIES[i]] = e.remaining(DIFFICULTIES[i]); }
+  var base = { phase:e.phase, questionNumber:e.questionNumber, poolCounts:poolCounts, totalPlayers:e.connectedCount() };
+  if (e.phase === 'lobby') {
+    base.roster = e.players.map(function(p){ return { id:p.id, name:p.name, connected:p.connected!==false, score:p.score }; });
+  } else if (e.phase === 'difficulty') {
+    base.leaderboard = e.topSnapshot();
+    base.allExhausted = e.allExhausted();
+  } else if (e.phase === 'question') {
+    var cq = e.currentQuestion;
+    base.difficulty = cq.qData.difficulty;
+    base.text = cq.qData.q;
+    base.options = cq.qData.options;
+    base.startedAt = cq.startedAt;
+    base.endsAt = cq.endsAt;
+    base.answeredCount = e.answeredCount();
+    base.yourAnswer = (forPlayerId && cq.answers[forPlayerId]) ? cq.answers[forPlayerId] : null;
+  } else if (e.phase === 'reveal') {
+    base.correctIndex = e.lastReveal.correctIndex;
+    base.distribution = e.lastReveal.distribution;
+    base.leaderboard = e.lastReveal.leaderboard;
+    base.difficulty = e.lastReveal.difficulty;
+    base.questionText = e.lastReveal.questionText;
+    base.options = e.lastReveal.options;
+    base.questionNumber = e.lastReveal.questionNumber;
+    base.allExhausted = e.allExhausted();
+    if (forPlayerId && e.currentQuestion) base.yourResult = e.currentQuestion.answers[forPlayerId] || { optionIndex:null, correct:false, points:0, late:true };
+  } else if (e.phase === 'gameover') {
+    base.leaderboard = e.topSnapshot();
+  }
+  return base;
+}
+
+/* ============================= HOST NETWORKING ============================= */
+function findGuestByConn(conn){
+  for (var i=0;i<app.guestConns.length;i++){ if (app.guestConns[i].conn === conn) return app.guestConns[i]; }
+  return null;
+}
+function hostAcceptConnection(conn){
+  conn.on('data', function(msg){ hostHandleMessage(conn, msg); });
+  conn.on('close', function(){ hostHandleDisconnect(conn); });
+}
+function hostHandleDisconnect(conn){
+  var g = findGuestByConn(conn);
+  if (!g) return;
+  app.engine.removePlayer(g.id);
+  app.guestConns = app.guestConns.filter(function(x){ return x.conn !== conn; });
+  hostBroadcastState();
+}
+function hostHandleMessage(conn, msg){
+  if (!msg || !msg.msgType) return;
+  if (msg.msgType === 'join_request') {
+    var name = (msg.name||'').toString().trim().slice(0,16) || randomDefaultName();
+    var id = randId();
+    app.engine.addPlayer(id, name);
+    app.guestConns.push({ id:id, conn:conn });
+    sendTo(conn, { msgType:'welcome', id:id });
+    hostBroadcastState();
+  } else if (msg.msgType === 'answer') {
+    var g = findGuestByConn(conn);
+    if (!g || app.engine.phase !== 'question') return;
+    app.engine.submitAnswer(g.id, msg.optionIndex);
+    if (app.engine.connectedCount() > 0 && app.engine.answeredCount() >= app.engine.connectedCount()) hostForceReveal();
+    else hostBroadcastState();
+  }
+}
+function hostBroadcastState(){
+  for (var i=0;i<app.guestConns.length;i++){
+    var g = app.guestConns[i];
+    if (g.conn && g.conn.open) sendTo(g.conn, { msgType:'state', payload: buildPublicState(g.id) });
+  }
+  render();
+}
+
+/* ============================= HOST ACTIONS ============================= */
+function hostStartQuiz(){
+  if (app.engine.connectedCount() < 1) { showToast('Tunggu minimal 1 pemain bergabung.'); return; }
+  app.engine.phase = 'difficulty';
+  hostBroadcastState();
+}
+function hostSelectDifficulty(diff){
+  try { app.engine.startQuestion(diff); } catch(e) { showToast('Soal '+DIFF_LABEL[diff]+' sudah habis.'); return; }
+  hostBroadcastState();
+  armAutoReveal(app.engine.currentQuestion.endsAt);
+}
+function hostForceReveal(){
+  clearTimeout(autoRevealTimer);
+  if (app.engine.phase !== 'question') return;
+  app.engine.reveal();
+  hostBroadcastState();
+}
+function hostNextRound(){ app.engine.phase='difficulty'; app.engine.currentQuestion=null; hostBroadcastState(); }
+function hostEndQuiz(){ app.engine.phase='gameover'; hostBroadcastState(); }
+function hostPlayAgain(){
+  app.engine.resetAllPools();
+  for (var i=0;i<app.engine.players.length;i++){ app.engine.players[i].score=0; app.engine.players[i].lastRank=null; }
+  app.engine.questionNumber = 0;
+  app.engine.phase = 'difficulty';
+  hostBroadcastState();
+}
+function hostResetPools(){ app.engine.resetAllPools(); hostBroadcastState(); }
+
+/* ============================= GUEST NETWORKING ============================= */
+function guestHandleMessage(msg){
+  if (!msg || !msg.msgType) return;
+  if (msg.msgType === 'welcome') {
+    app.myId = msg.id;
+  } else if (msg.msgType === 'state') {
+    app.lastReceivedState = msg.payload;
+    if (msg.payload.phase === 'question') startCountdownTicker(msg.payload.endsAt, DIFF_TIME_LIMIT[msg.payload.difficulty]);
+    render();
+  }
+}
+function guestSubmitAnswer(optionIndex){
+  if (!app.hostConn) return;
+  sendTo(app.hostConn, { msgType:'answer', optionIndex:optionIndex });
+  if (app.lastReceivedState) app.lastReceivedState.yourAnswer = { optionIndex:optionIndex };
+  render();
+}
+
+/* ============================= SOLO ACTIONS ============================= */
+function soloSelectDifficulty(diff){
+  try { app.engine.startQuestion(diff); } catch(e) { showToast('Soal '+DIFF_LABEL[diff]+' sudah habis.'); return; }
+  armAutoReveal(app.engine.currentQuestion.endsAt);
+  render();
+}
+function soloSubmitAnswer(optionIndex){
+  if (app.engine.phase !== 'question') return;
+  app.engine.submitAnswer(app.soloPlayerId, optionIndex);
+  clearTimeout(autoRevealTimer);
+  app.engine.reveal();
+  render();
+}
+function soloNextRound(){ app.engine.phase='difficulty'; app.engine.currentQuestion=null; render(); }
+function soloEndQuiz(){ app.engine.phase='gameover'; render(); }
+function soloPlayAgain(){
+  app.engine.resetAllPools();
+  app.engine.players[0].score = 0; app.engine.players[0].lastRank = null;
+  app.engine.questionNumber = 0;
+  app.engine.phase = 'difficulty';
+  render();
+}
+function soloResetPools(){ app.engine.resetAllPools(); render(); }
+
+/* ============================= TIMERS ============================= */
+function startCountdownTicker(endsAt, totalSeconds){
+  clearInterval(countdownTicker);
+  function tick(){
+    var numEl = document.getElementById('qTimerNum');
+    var fillEl = document.getElementById('qTimerFill');
+    if (!numEl) { clearInterval(countdownTicker); return; }
+    var msLeft = Math.max(0, endsAt - Date.now());
+    numEl.textContent = Math.ceil(msLeft/1000);
+    if (fillEl && totalSeconds) fillEl.style.width = Math.max(0, (msLeft/1000)/totalSeconds*100)+'%';
+    if (msLeft<=0) clearInterval(countdownTicker);
+  }
+  tick();
+  countdownTicker = setInterval(tick, 200);
+}
+function armAutoReveal(endsAt){
+  clearTimeout(autoRevealTimer);
+  var wait = Math.max(0, endsAt - Date.now()) + 80;
+  autoRevealTimer = setTimeout(function(){
+    if (app.mode === 'host' && app.engine.phase === 'question') hostForceReveal();
+    else if (app.mode === 'solo' && app.engine.phase === 'question') { app.engine.reveal(); render(); }
+  }, wait);
+}
+
+/* ============================= RENDER ============================= */
+var SCREENS = ['menuCard','entryCard','lobbyCard','diffCard','questionCard','revealCard','gameOverCard'];
+function showScreen(id){
+  for (var i=0;i<SCREENS.length;i++){ document.getElementById(SCREENS[i]).classList.toggle('hidden', SCREENS[i]!==id); }
+  document.getElementById('btnExit').classList.toggle('hidden', id==='menuCard');
+  document.getElementById('brandHead').classList.toggle('hidden', id!=='menuCard' && id!=='entryCard');
+  if (id !== 'questionCard') clearInterval(countdownTicker);
+}
+function render(){
+  var state = null;
+  if (app.mode === 'guest') state = app.lastReceivedState;
+  else if (app.mode === 'host') state = buildPublicState(null);
+  else if (app.mode === 'solo') state = buildPublicState(app.soloPlayerId);
+  if (!state) return;
+  if (state.phase === 'lobby') { showScreen('lobbyCard'); renderLobby(state); }
+  else if (state.phase === 'difficulty') { showScreen('diffCard'); renderDifficulty(state); }
+  else if (state.phase === 'question') { showScreen('questionCard'); renderQuestion(state); }
+  else if (state.phase === 'reveal') { showScreen('revealCard'); renderReveal(state); }
+  else if (state.phase === 'gameover') { showScreen('gameOverCard'); renderGameOver(state); }
+}
+
+function rankDeltaHTML(row){
+  if (row.prevRank == null) return '<span class="dl new">BARU</span>';
+  if (row.rank < row.prevRank) return '<span class="dl up">'+iconSVG('arrowUp',11,'currentColor')+(row.prevRank-row.rank)+'</span>';
+  if (row.rank > row.prevRank) return '<span class="dl down">'+iconSVG('arrowDown',11,'currentColor')+(row.rank-row.prevRank)+'</span>';
+  return '<span class="dl same">'+iconSVG('dash',11,'currentColor')+'</span>';
+}
+function renderBoardHTML(rows, title){
+  var html = '<div class="board-title">'+escapeText(title)+' (Top 16)</div>';
+  html += rows.map(function(p, i){
+    var meCls = (p.id === app.myId) ? ' me' : '';
+    return '<div class="board-row'+meCls+'"><span class="rk">#'+p.rank+'</span><span class="ava">'+avatarSVG(i,28)+'</span><span class="nm">'+escapeText(p.name)+'</span>'+rankDeltaHTML(p)+'<span class="sc">'+p.score+'</span></div>';
+  }).join('');
+  return html;
+}
+
+function renderLobby(state){
+  var isHost = app.mode === 'host';
+  document.getElementById('roomCodeWrap').classList.toggle('hidden', !(isHost || app.mode==='guest'));
+  document.getElementById('roomCodeVal').textContent = currentRoomCode || '-----';
+  document.getElementById('lobbySub').textContent = isHost ? 'Bagikan kode room ke teman-teman kamu.' : 'Menunggu host memulai kuis...';
+  var roster = state.roster || [];
+  var wrap = document.getElementById('rosterWrap');
+  if (!roster.length) {
+    wrap.innerHTML = '<div class="roster-empty">Belum ada pemain bergabung.</div>';
+  } else {
+    wrap.innerHTML = roster.map(function(p, i){
+      var meTag = (p.id === app.myId) ? ' <span class="me-tag">(kamu)</span>' : '';
+      return '<div class="roster-row'+(p.connected===false?' offline':'')+'"><span class="ava">'+avatarSVG(i,32)+'</span><span class="rn">'+escapeText(p.name)+meTag+'</span><span class="dot"></span></div>';
+    }).join('');
+  }
+  document.getElementById('btnStartQuiz').classList.toggle('hidden', !isHost);
+  document.getElementById('btnStartQuiz').disabled = roster.filter(function(p){ return p.connected!==false; }).length < 1;
+  document.getElementById('guestWaitingMsg').classList.toggle('hidden', isHost);
+}
+
+function renderDifficulty(state){
+  var canControl = (app.mode === 'host' || app.mode === 'solo');
+  document.getElementById('diffTitle').textContent = state.questionNumber>0 ? 'Pilih Soal Berikutnya' : 'Pilih Soal Pertama';
+  document.getElementById('diffSub').textContent = canControl ? 'Pilih tingkat kesulitan.' : 'Host sedang memilih tingkat kesulitan.';
+  document.getElementById('diffGrid').classList.toggle('hidden', !canControl || state.allExhausted);
+  document.getElementById('waitingForHostBlock').classList.toggle('hidden', canControl);
+  document.getElementById('exhaustedBlock').classList.toggle('hidden', !(canControl && state.allExhausted));
+
+  if (canControl) {
+    var grid = document.getElementById('diffGrid');
+    grid.innerHTML = DIFFICULTIES.map(function(d){
+      var remaining = state.poolCounts[d];
+      var extra = (d==='extreme') ? ' extreme-span' : '';
+      return '<button class="diff-btn'+extra+'" data-diff="'+d+'" style="background:'+DIFF_COLOR[d]+'" '+(remaining<=0?'disabled':'')+'>' +
+        '<span class="di">'+iconSVG(DIFF_ICON[d],22,'#fff')+'</span><span class="dn">'+DIFF_LABEL[d]+'</span><span class="dc">'+remaining+' soal tersisa</span></button>';
+    }).join('');
+    Array.prototype.forEach.call(grid.querySelectorAll('.diff-btn'), function(btn){
+      btn.addEventListener('click', function(){
+        var d = btn.getAttribute('data-diff');
+        if (app.mode === 'host') hostSelectDifficulty(d); else soloSelectDifficulty(d);
+      });
+    });
+  }
+
+  var boardWrap = document.getElementById('diffBoardWrap');
+  if (app.mode === 'solo') {
+    var me = app.engine.players[0];
+    boardWrap.innerHTML = '<div class="my-score-solo"><div class="n">'+(me?me.score:0)+'</div><div class="l">SKOR KAMU</div></div>';
+  } else if (state.questionNumber>0 && state.leaderboard) {
+    boardWrap.innerHTML = renderBoardHTML(state.leaderboard, 'Peringkat Sementara');
+  } else {
+    boardWrap.innerHTML = '';
+  }
+  document.getElementById('btnEndQuiz').classList.toggle('hidden', app.mode!=='host');
+}
+
+function renderQuestion(state){
+  var badge = document.getElementById('qDiffBadge');
+  badge.innerHTML = iconSVG(DIFF_ICON[state.difficulty],14,'#fff')+' '+DIFF_LABEL[state.difficulty];
+  badge.style.background = DIFF_COLOR[state.difficulty];
+  document.getElementById('qNumLabel').textContent = 'Soal '+state.questionNumber;
+  document.getElementById('qText').innerHTML = escapeText(state.text);
+  startCountdownTicker(state.endsAt, DIFF_TIME_LIMIT[state.difficulty]);
+
+  var canAnswer = (app.mode === 'guest' || app.mode === 'solo');
+  var already = state.yourAnswer;
+  var grid = document.getElementById('qOptGrid');
+  grid.innerHTML = state.options.map(function(opt, i){
+    var pickedCls = (already && already.optionIndex === i) ? ' picked' : '';
+    return '<button class="opt-btn'+pickedCls+'" data-opt="'+i+'" style="background:'+OPTION_COLORS[i]+'" '+((!canAnswer || already)?'disabled':'')+'>' +
+      '<span class="os">'+iconSVG(OPTION_ICON_NAMES[i],20,'#fff')+'</span><span>'+escapeText(opt)+'</span></button>';
+  }).join('');
+  if (canAnswer && !already) {
+    Array.prototype.forEach.call(grid.querySelectorAll('.opt-btn'), function(btn){
+      btn.addEventListener('click', function(){
+        var idx = Number(btn.getAttribute('data-opt'));
+        if (app.mode === 'guest') guestSubmitAnswer(idx); else soloSubmitAnswer(idx);
+      });
+    });
+  }
+  document.getElementById('qLockMsg').classList.toggle('hidden', !(canAnswer && already));
+  var isHostCtrl = app.mode === 'host';
+  document.getElementById('qHostRow').classList.toggle('hidden', !isHostCtrl);
+  if (isHostCtrl) document.getElementById('qAnsCount').textContent = state.answeredCount+'/'+state.totalPlayers+' sudah menjawab';
+}
+
+function renderReveal(state){
+  var badge = document.getElementById('rvDiffBadge');
+  badge.innerHTML = iconSVG(DIFF_ICON[state.difficulty],14,'#fff')+' '+DIFF_LABEL[state.difficulty];
+  badge.style.background = DIFF_COLOR[state.difficulty];
+  document.getElementById('rvNumLabel').textContent = 'Soal '+state.questionNumber;
+  document.getElementById('rvText').innerHTML = escapeText(state.questionText);
+
+  var grid = document.getElementById('rvOptGrid');
+  grid.innerHTML = state.options.map(function(opt, i){
+    var isCorrect = i === state.correctIndex;
+    var cls = isCorrect ? ' correct-glow' : ' dim';
+    return '<button class="opt-btn'+cls+'" style="background:'+OPTION_COLORS[i]+'" disabled><span class="os">'+iconSVG(OPTION_ICON_NAMES[i],20,'#fff')+'</span><span>'+escapeText(opt)+'</span>'+(isCorrect?'<span class="correct-check">'+iconSVG('check',13,'#16a34a')+'</span>':'')+'</button>';
+  }).join('');
+
+  var totalAns = state.distribution.reduce(function(a,b){ return a+b; },0);
+  document.getElementById('rvDistWrap').innerHTML = state.distribution.map(function(cnt, i){
+    var pct = totalAns ? Math.round(cnt/totalAns*100) : 0;
+    return '<div class="dist-row"><span class="os">'+iconSVG(OPTION_ICON_NAMES[i],17,OPTION_COLORS[i])+'</span><div class="track"><div class="fill" style="width:'+pct+'%; background:'+OPTION_COLORS[i]+'"></div></div><span class="cnt">'+cnt+'</span></div>';
+  }).join('');
+
+  var banner = document.getElementById('rvResultBanner');
+  if (app.mode === 'host') {
+    banner.className = 'result-banner none';
+    banner.innerHTML = iconSVG('hourglass',20,'#6b6280')+'<span>'+totalAns+' dari '+state.totalPlayers+' pemain menjawab.</span>';
+  } else {
+    var yr = state.yourResult;
+    if (!yr || yr.optionIndex==null) { banner.className='result-banner none'; banner.innerHTML = iconSVG('hourglass',20,'#6b6280')+'<span>Waktu habis, kamu tidak menjawab.</span>'; }
+    else if (yr.correct) { banner.className='result-banner win'; banner.innerHTML = iconSVG('trophy',22,'#16a34a')+'<span>Benar! +'+yr.points+' poin</span>'; }
+    else { banner.className='result-banner lose'; banner.innerHTML = iconSVG('crossCircle',22,'#dc2626')+'<span>Kurang tepat.</span>'; }
+  }
+
+  var boardArea = document.getElementById('rvBoardArea');
+  if (app.mode === 'solo') {
+    var me = app.engine.players[0];
+    boardArea.innerHTML = '<div class="my-score-solo"><div class="n">'+(me?me.score:0)+'</div><div class="l">TOTAL SKOR KAMU</div></div>';
+  } else {
+    boardArea.innerHTML = renderBoardHTML(state.leaderboard, 'Peringkat');
+  }
+
+  document.getElementById('btnNextRound').classList.toggle('hidden', !(app.mode==='host' || app.mode==='solo'));
+  document.getElementById('btnNextRound').textContent = state.allExhausted ? 'Lihat Hasil Akhir' : 'Lanjut ke Soal Berikutnya';
+  document.getElementById('btnEndQuiz2').classList.toggle('hidden', app.mode!=='host');
+}
+
+function renderGameOver(state){
+  document.getElementById('goSub').textContent = app.mode==='solo' ? 'Kerja bagus!' : 'Terima kasih sudah bermain.';
+  var podiumArea = document.getElementById('goPodiumArea');
+  var boardArea = document.getElementById('goBoardArea');
+  if (app.mode === 'solo') {
+    podiumArea.innerHTML = '';
+    var me = app.engine.players[0];
+    boardArea.innerHTML = '<div class="my-score-solo"><div class="n">'+(me?me.score:0)+'</div><div class="l">SKOR AKHIR</div></div>';
+  } else {
+    var lb = state.leaderboard || [];
+    var top3 = lb.slice(0,3);
+    var cardDelay = { 1:0.55, 2:0.25, 3:0 };
+    var plinthDelay = { 1:0.45, 2:0.18, 3:0 };
+    function col(rank, pos){
+      var p = top3[pos];
+      var body = p
+        ? characterCardHTML(pos, p.name, p.score, rank, cardDelay[rank])
+        : '<div class="stage-empty"></div>';
+      return '<div class="stage-col col'+rank+'">' + body +
+        '<div class="plinth plinth-'+rank+'" style="animation-delay:'+plinthDelay[rank]+'s">'+rank+'</div></div>';
+    }
+    podiumArea.innerHTML = '<div class="stage">' + col(1,0) + col(2,1) + col(3,2) + '</div>';
+    boardArea.innerHTML = (lb.length > 3) ? renderBoardHTML(lb.slice(3), 'Klasemen Selengkapnya') : '';
+  }
+  document.getElementById('btnPlayAgain').classList.toggle('hidden', !(app.mode==='host' || app.mode==='solo'));
+}
+
+/* ============================= MENU / ENTRY WIRING ============================= */
+document.getElementById('btnSolo').addEventListener('click', function(){
+  app.mode = 'solo';
+  app.engine = new QuizEngine();
+  app.soloPlayerId = randId();
+  app.engine.addPlayer(app.soloPlayerId, 'Kamu');
+  app.engine.phase = 'difficulty';
+  render();
+});
+
+var entryFlow = null;
+document.getElementById('btnGoHost').addEventListener('click', function(){
+  entryFlow = 'host';
+  document.getElementById('entryTitle').textContent = 'Buat Room';
+  document.getElementById('entrySub').textContent = 'Isi nama kamu sebagai host.';
+  document.getElementById('codeFieldWrap').classList.add('hidden');
+  document.getElementById('btnEntrySubmit').textContent = 'Buat Room';
+  document.getElementById('entryError').textContent = '';
+  showScreen('entryCard');
+});
+document.getElementById('btnGoJoin').addEventListener('click', function(){
+  entryFlow = 'join';
+  document.getElementById('entryTitle').textContent = 'Gabung Room';
+  document.getElementById('entrySub').textContent = 'Masukkan nama dan kode room dari host.';
+  document.getElementById('codeFieldWrap').classList.remove('hidden');
+  document.getElementById('btnEntrySubmit').textContent = 'Gabung';
+  document.getElementById('entryError').textContent = '';
+  showScreen('entryCard');
+});
+document.getElementById('btnEntryBack').addEventListener('click', function(){ showScreen('menuCard'); });
+
+function setEntryBusy(b){
+  document.getElementById('entryBusy').classList.toggle('hidden', !b);
+  document.getElementById('btnEntrySubmit').disabled = b;
+}
+function showEntryError(msg){ document.getElementById('entryError').textContent = msg||''; }
+
+document.getElementById('btnEntrySubmit').addEventListener('click', function(){
+  if (!peerAvailable()) { showEntryError(NO_INTERNET_MSG); return; }
+  var name = (document.getElementById('nameInput').value||'').trim().slice(0,16) || randomDefaultName();
+  app.myName = name;
+  if (entryFlow === 'host') {
+    app.mode = 'host';
+    app.engine = new QuizEngine();
+    app.guestConns = [];
+    createAttempts = 0;
+    setEntryBusy(true); showEntryError('');
+    tryCreateRoom();
+  } else {
+    var code = (document.getElementById('codeInput').value||'').trim().toUpperCase();
+    if (code.length < 4) { showEntryError('Masukkan kode room yang valid.'); return; }
+    app.mode = 'guest';
+    currentRoomCode = code;
+    setEntryBusy(true); showEntryError('');
+    tryJoinRoom(code);
+  }
+});
+
+var createAttempts = 0;
+function tryCreateRoom(){
+  var code = genRoomCode();
+  app.peer = new Peer(ROOM_PREFIX + code);
+  app.peer.on('open', function(){
+    currentRoomCode = code;
+    setEntryBusy(false);
+    app.engine.phase = 'lobby';
+    render();
+  });
+  app.peer.on('connection', function(conn){ hostAcceptConnection(conn); });
+  app.peer.on('error', function(err){
+    if (err && err.type==='unavailable-id' && createAttempts<5) { createAttempts++; app.peer.destroy(); tryCreateRoom(); }
+    else { showEntryError('Gagal membuat room. Coba lagi.'); setEntryBusy(false); }
+  });
+}
+
+var joinSettled = false, joinTimeoutId = null;
+function tryJoinRoom(code){
+  joinSettled = false;
+  app.peer = new Peer();
+  app.peer.on('open', function(){
+    var conn = app.peer.connect(ROOM_PREFIX + code, { reliable:true });
+    app.hostConn = conn;
+    conn.on('open', function(){
+      if (joinSettled) return; joinSettled = true; clearTimeout(joinTimeoutId);
+      setEntryBusy(false);
+      sendTo(conn, { msgType:'join_request', name: app.myName });
+      showScreen('lobbyCard');
+      render();
+    });
+    conn.on('data', function(msg){ guestHandleMessage(msg); });
+    conn.on('close', function(){ showToast('Host terputus, room berakhir.'); backToMenu(); });
+    conn.on('error', function(){ failJoin('Room tidak ditemukan.'); });
+    joinTimeoutId = setTimeout(function(){ failJoin('Room tidak ditemukan.'); }, 8000);
+  });
+  app.peer.on('error', function(err){
+    if (err && err.type==='peer-unavailable') failJoin('Room tidak ditemukan.');
+    else failJoin('Gagal terhubung. Coba lagi.');
+  });
+}
+function failJoin(msg){ if (joinSettled) return; joinSettled=true; clearTimeout(joinTimeoutId); setEntryBusy(false); showEntryError(msg); teardownPeer(); }
+function teardownPeer(){
+  if (app.hostConn) { try{app.hostConn.close();}catch(e){} app.hostConn=null; }
+  for (var i=0;i<app.guestConns.length;i++){ try{app.guestConns[i].conn.close();}catch(e){} }
+  app.guestConns = [];
+  if (app.peer) { try{app.peer.destroy();}catch(e){} app.peer=null; }
+}
+function backToMenu(){
+  clearInterval(countdownTicker); clearTimeout(autoRevealTimer);
+  teardownPeer();
+  app.mode=null; app.engine=null; app.myId=null; app.soloPlayerId=null; app.lastReceivedState=null;
+  currentRoomCode='';
+  showScreen('menuCard');
+}
+
+/* ============================= IN-GAME BUTTON WIRING ============================= */
+document.getElementById('btnExit').addEventListener('click', function(){
+  if (!window.confirm('Yakin ingin keluar dan kembali ke menu utama?')) return;
+  backToMenu();
+});
+document.getElementById('btnBackMenu').addEventListener('click', function(){ backToMenu(); });
+document.getElementById('btnCopyCode').addEventListener('click', function(){
+  var btn = document.getElementById('btnCopyCode');
+  function done(){ var old=btn.textContent; btn.textContent='Tersalin!'; setTimeout(function(){btn.textContent=old;},1400); }
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(currentRoomCode).then(done).catch(done);
+  else done();
+});
+document.getElementById('btnStartQuiz').addEventListener('click', function(){ if (app.mode==='host') hostStartQuiz(); });
+document.getElementById('btnResetPools').addEventListener('click', function(){ if (app.mode==='host') hostResetPools(); else if (app.mode==='solo') soloResetPools(); });
+document.getElementById('btnEndQuiz').addEventListener('click', function(){ if (app.mode==='host') hostEndQuiz(); else if (app.mode==='solo') soloEndQuiz(); });
+document.getElementById('btnEndQuiz2').addEventListener('click', function(){ if (app.mode==='host') hostEndQuiz(); });
+document.getElementById('btnForceReveal').addEventListener('click', function(){ if (app.mode==='host') hostForceReveal(); });
+document.getElementById('btnNextRound').addEventListener('click', function(){
+  if (app.mode === 'host') { if (app.engine.allExhausted()) hostEndQuiz(); else hostNextRound(); }
+  else if (app.mode === 'solo') { if (app.engine.allExhausted()) soloEndQuiz(); else soloNextRound(); }
+});
+document.getElementById('btnPlayAgain').addEventListener('click', function(){ if (app.mode==='host') hostPlayAgain(); else if (app.mode==='solo') soloPlayAgain(); });
+
+/* ============================= STATIC ICON INJECTION (full SVG, no emoji) ============================= */
+document.getElementById('btnExit').innerHTML = iconSVG('close',16,'#fff');
+document.getElementById('waitingIcon').innerHTML = iconSVG('hourglass',36,'#8a83a0');
+document.getElementById('goTrophyIcon').innerHTML = iconSVG('trophy',24,'#eab308');
+Array.prototype.forEach.call(document.querySelectorAll('.mi[data-icon]'), function(el){
+  el.innerHTML = iconSVG(el.getAttribute('data-icon'), 24, '#fff');
+});
+
+showScreen('menuCard');
+
+})();
+</script>
+</body>
+</html>
