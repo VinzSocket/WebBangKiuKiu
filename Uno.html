@@ -70,7 +70,11 @@
   .roster-row .dot.on{background:var(--ok);}
   .roster-row .dot.off{background:var(--text-muted);}
   .roster-row .rname{flex:1;}
+  .roster-row .roster-avatar{display:flex; flex:none; align-items:center; justify-content:center;}
+  .roster-row .roster-avatar svg{display:block;}
   .roster-row button.tiny-toggle{background:var(--panel-2); border:1px solid var(--border); color:var(--text-muted); font-size:11px; padding:4px 8px; border-radius:6px; cursor:pointer;}
+  #scoreList .srow .sname{display:flex; align-items:center; gap:7px;}
+  #scoreList .srow .sname svg{display:block; flex:none;}
   #onlineError{color:var(--danger); font-size:12.5px; margin-top:8px; min-height:16px;}
   .room-code-box{text-align:center; padding:6px 0 4px;}
   .room-code-box .cap{font-size:11px; letter-spacing:0.1em; color:var(--text-muted); text-transform:uppercase;}
@@ -79,10 +83,10 @@
   .copy-btn:hover{border-color:var(--brass-dim); color:var(--brass);}
 
   #opponentsRow{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:100%; max-width:580px;}
-  .opp-chip{background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:6px 10px; display:flex; align-items:center; gap:6px; min-width:96px; transition:border-color .15s, box-shadow .15s;}
-  .opp-chip.active-turn{border-color:var(--brass); box-shadow:0 0 0 2px rgba(201,161,90,0.25);}
-  .opp-avatar{width:28px;height:28px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;flex:none;overflow:hidden;}
-  .opp-chip.type-bot{border-style:dashed;}
+  .opp-chip{background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:6px 10px; display:flex; align-items:center; gap:6px; min-width:96px; transition:border-color .15s, box-shadow .15s, transform .15s;}
+  .opp-chip.active-turn{border-color:var(--brass); box-shadow:0 0 0 2px rgba(201,161,90,0.25); transform:translateY(-2px);}
+  .opp-avatar{width:34px;height:34px;flex:none;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));}
+  .opp-avatar svg{width:100%;height:100%;display:block;}
   .opp-info{display:flex; flex-direction:column; line-height:1.25; min-width:0;}
   .opp-name{font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px;}
   .opp-count{font-size:11px; color:var(--text-muted);}
@@ -93,7 +97,7 @@
   .pile-stack svg{width:100%; height:100%; display:block; filter:drop-shadow(0 3px 5px rgba(0,0,0,.4));}
   .pile-count-badge{position:absolute; bottom:-8px; right:-10px; background:var(--brass); color:#20180a; font-weight:700; font-size:11.5px; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; border:2px solid var(--bg);}
   .color-ring{position:absolute; inset:-7px; border-radius:16px; border:3px solid var(--ring); pointer-events:none;}
-  .direction-icon{width:30px; height:30px;}
+  .direction-icon{width:40px; height:40px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.4));}
 
   .status-bar{
     width:100%; max-width:580px; display:flex; align-items:center; justify-content:center; gap:9px;
@@ -110,14 +114,9 @@
   .hand-card.playable:hover{transform:translateY(-12px) scale(1.06); z-index:5;}
   .hand-card.notplayable{opacity:.5; cursor:default;}
   .hand-card.notplayable:hover{transform:none;}
-  .hand-card.selected{transform:translateY(-16px) scale(1.08); z-index:7; outline:3px solid var(--brass); outline-offset:2px; border-radius:9px;}
-  .hand-card.selected:hover{transform:translateY(-16px) scale(1.08);}
-
-  .you-badge{display:flex; align-items:center; gap:8px; padding:4px 10px; margin-bottom:-4px;}
-  .you-badge .opp-avatar{width:30px;height:30px;border:2px solid transparent;}
-  .you-badge.active-turn .opp-avatar{border-color:var(--brass); box-shadow:0 0 0 2px rgba(201,161,90,0.25);}
-  .you-badge .you-name{font-size:12.5px; font-weight:600; color:var(--text-muted);}
-  .you-badge.active-turn .you-name{color:var(--brass);}
+  .hand-card.combo-selected{transform:translateY(-14px); z-index:6; cursor:pointer;}
+  .hand-card.combo-selected svg{border-radius:10px; box-shadow:0 0 0 3px var(--ring), 0 3px 5px rgba(0,0,0,.45);}
+  .combo-badge{position:absolute; top:-8px; right:-6px; background:var(--brass); color:#20180a; font-weight:800; font-size:11px; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--bg);}
 
   #eventLog{max-height:180px; overflow-y:auto; font-size:12.5px; line-height:1.7; color:var(--text-muted);}
   #eventLog::-webkit-scrollbar{width:6px;}
@@ -150,15 +149,12 @@
     transition:opacity .25s ease, transform .25s ease;
   }
   .turn-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .turn-toast .tt-row{display:flex; align-items:center; gap:8px;}
+  .turn-toast svg{display:block; flex:none;}
+  .pass-avatar{display:flex; justify-content:center; margin-bottom:10px;}
+  .pass-avatar svg{display:block;}
   .exit-row{opacity:0.85;}
   .exit-row:hover{opacity:1;}
-
-  .thrown-card{
-    position:fixed; z-index:80; pointer-events:none; will-change:transform,opacity;
-    transition:transform .46s cubic-bezier(.22,.68,.32,1), opacity .46s ease .05s;
-    transform:translate(0,0) rotate(0deg) scale(1); opacity:1;
-  }
-  .thrown-card svg{width:100%;height:100%;display:block;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4));}
 
   @media (max-width:760px){
     .layout{flex-direction:column; align-items:center;}
@@ -178,15 +174,13 @@
       <div id="opponentsRow"></div>
       <div id="pileArea"></div>
       <div class="status-bar" id="statusBar"></div>
-      <div id="youBadge" class="you-badge"></div>
       <div id="handWrap"></div>
       <div class="actions" id="turnActions" style="width:100%; max-width:580px;">
         <button id="btnDraw">Ambil Kartu</button>
         <button id="btnPass">Lewat</button>
-      </div>
-      <div class="actions" id="comboBar" style="width:100%; max-width:580px; display:none; margin-top:2px;">
-        <button id="btnCancelCombo">Batal</button>
-        <button class="primary" id="btnPlayCombo">Mainkan</button>
+        <button id="btnCombo" style="display:none;">🔗 Kombo</button>
+        <button class="primary" id="btnComboPlay" style="display:none;">Mainkan Kombo</button>
+        <button id="btnComboCancel" style="display:none;">Batal</button>
       </div>
       <div class="actions exit-row" id="exitRow" style="width:100%; max-width:580px; margin-top:2px;">
         <button class="danger" id="btnExitGame">Keluar Room</button>
@@ -261,6 +255,7 @@
 
 <div class="modal-overlay" id="passOverlay">
   <div class="promo-box">
+    <div class="pass-avatar" id="passOverlayAvatar"></div>
     <p id="passOverlayTitle">Giliran Pemain</p>
     <div id="passOverlaySub" style="color:var(--text-muted); font-size:13px; margin-top:-8px; margin-bottom:16px;">Berikan perangkat ke pemain ini, lalu tekan tombol di bawah.</div>
     <div class="actions">
@@ -359,12 +354,63 @@ function cardSVG(card, faceDown){
 }
 function directionIconSVG(direction){
   const flip = direction === -1 ? 'scale(-1,1)' : '';
-  return '<svg class="direction-icon" viewBox="0 0 24 24" style="transform:'+flip+'" fill="none" stroke="#c9a15a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
-    '<polyline points="17 1 21 5 17 9"></polyline>' +
-    '<path d="M3 11V9a4 4 0 0 1 4-4h14"></path>' +
-    '<polyline points="7 23 3 19 7 15"></polyline>' +
-    '<path d="M21 13v2a4 4 0 0 1-4 4H3"></path>' +
+  return '<svg class="direction-icon" viewBox="0 0 44 44" style="transform:'+flip+'">' +
+    '<circle cx="22" cy="22" r="20" fill="#1c2721" stroke="#37453b" stroke-width="2"/>' +
+    '<path d="M13,14 A14,14 0 1,1 13,30" fill="none" stroke="#d7c26a" stroke-width="5" stroke-linecap="round"/>' +
+    '<path d="M20,8 L12,14 L20,20" fill="none" stroke="#d7c26a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
     '</svg>';
+}
+
+/* ============================= CARTOON AVATAR ART (Kahoot-style little characters) ============================= */
+const AVATAR_PALETTE = ['#ff6b6b','#4ecdc4','#f6c445','#8f7cf0','#ff9f43','#2fbf7e','#54a0ff','#ff6bb0'];
+const AVATAR_BOT_COLOR = '#5c7360';
+function avatarFace(eyeY, mouthPath){
+  return '<circle cx="15" cy="'+eyeY+'" r="4.1" fill="#fff"/><circle cx="25" cy="'+eyeY+'" r="4.1" fill="#fff"/>' +
+    '<circle cx="16" cy="'+(eyeY+0.6)+'" r="2" fill="#20180a"/><circle cx="24" cy="'+(eyeY+0.6)+'" r="2" fill="#20180a"/>' +
+    (mouthPath||'');
+}
+function avatarSVG(seatIndex, isBot, size){
+  size = size || 34;
+  if (isBot) {
+    const body = '<rect x="3" y="18" width="4" height="10" rx="2" fill="'+AVATAR_BOT_COLOR+'"/>' +
+      '<rect x="33" y="18" width="4" height="10" rx="2" fill="'+AVATAR_BOT_COLOR+'"/>' +
+      '<line x1="20" y1="10" x2="20" y2="4" stroke="'+AVATAR_BOT_COLOR+'" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<circle cx="20" cy="4" r="2.6" fill="'+AVATAR_BOT_COLOR+'"/>' +
+      '<rect x="7" y="10" width="26" height="24" rx="7" fill="'+AVATAR_BOT_COLOR+'"/>';
+    const face = avatarFace(21, '<path d="M14,28 Q20,32 26,28" stroke="#0e130f" stroke-width="1.7" fill="none" stroke-linecap="round"/>');
+    return '<svg viewBox="0 0 40 40" width="'+size+'" height="'+size+'">'+body+face+'</svg>';
+  }
+  const variant = ((seatIndex%8)+8)%8;
+  const color = AVATAR_PALETTE[variant];
+  let body, eyeY;
+  switch(variant){
+    case 0:
+      body = '<path d="M20,5 L23.5,12 L16.5,12 Z" fill="'+color+'"/><circle cx="20" cy="23" r="14" fill="'+color+'"/>';
+      eyeY = 21; break;
+    case 1:
+      body = '<path d="M9,9 L17,16 L9,20 Z" fill="'+color+'"/><path d="M31,9 L23,16 L31,20 Z" fill="'+color+'"/><circle cx="20" cy="24" r="13" fill="'+color+'"/>';
+      eyeY = 22; break;
+    case 2:
+      body = '<line x1="9" y1="8" x2="13" y2="14" stroke="'+color+'" stroke-width="3" stroke-linecap="round"/><line x1="31" y1="8" x2="27" y2="14" stroke="'+color+'" stroke-width="3" stroke-linecap="round"/><ellipse cx="20" cy="21" rx="12" ry="15" fill="'+color+'"/>';
+      eyeY = 19; break;
+    case 3:
+      body = '<path d="M20,4 L24,15 L36,15 L26,23 L30,35 L20,27 L10,35 L14,23 L4,15 L16,15 Z" fill="'+color+'"/>';
+      eyeY = 19; break;
+    case 4:
+      body = '<circle cx="11" cy="25" r="8.5" fill="'+color+'"/><circle cx="20" cy="18" r="10.5" fill="'+color+'"/><circle cx="29" cy="25" r="8.5" fill="'+color+'"/><rect x="8" y="23" width="24" height="11" rx="5.5" fill="'+color+'"/>';
+      eyeY = 20; break;
+    case 5:
+      body = '<rect x="9" y="9" width="22" height="22" rx="4" fill="'+color+'" transform="rotate(45 20 20)"/>';
+      eyeY = 20; break;
+    case 6:
+      body = '<path d="M8,34 V18 a12,12 0 0,1 24,0 V34 l-4,-4 -4,4 -4,-4 -4,4 -4,-4 Z" fill="'+color+'"/>';
+      eyeY = 17; break;
+    default:
+      body = '<circle cx="9" cy="14" r="3.4" fill="'+color+'"/><circle cx="31" cy="14" r="3.4" fill="'+color+'"/><circle cx="20" cy="23" r="13" fill="'+color+'"/>';
+      eyeY = 21; break;
+  }
+  const face = avatarFace(eyeY, '<path d="M15,'+(eyeY+8)+' Q20,'+(eyeY+12)+' 25,'+(eyeY+8)+'" stroke="#20180a" stroke-width="1.6" fill="none" stroke-linecap="round"/>');
+  return '<svg viewBox="0 0 40 40" width="'+size+'" height="'+size+'">'+body+face+'</svg>';
 }
 
 /* ============================= UNO ENGINE (validated) ============================= */
@@ -499,45 +545,31 @@ class UnoGame {
     this.turnCount++;
     return { effect };
   }
-  /* Combo: play several cards sharing the same value in one turn. Only the LAST
-     card's effect (skip/reverse/draw2/wild4/color) is applied — same rules as a
-     single play, just dumping duplicates together. */
-  playCombo(playerIdx, cardIds, chosenColor) {
-    if (!cardIds || cardIds.length === 0) throw new Error('no cards selected');
+  playCombo(playerIdx, cardIds) {
+    if (!cardIds || cardIds.length === 0) throw new Error('empty combo');
     const hand = this.hands[playerIdx];
     const cards = cardIds.map(id => hand.find(c => c.id === id));
     if (cards.some(c => !c)) throw new Error('card not in hand');
-    const baseValue = cards[0].value;
-    if (!cards.every(c => c.value === baseValue)) throw new Error('combo cards must share the same value');
+    const value = cards[0].value;
+    if (!(value >= '0' && value <= '9')) throw new Error('combo only for number cards');
+    if (cards.some(c => c.value !== value)) throw new Error('combo cards must share the same value');
     const top = this.topCard();
-    if (!canPlay(cards[0], top, this.currentColor)) throw new Error('illegal move');
-    for (const id of cardIds) { const i = hand.findIndex(c => c.id === id); hand.splice(i, 1); }
+    const anyLegal = cards.some(c => canPlay(c, top, this.currentColor));
+    if (!anyLegal) throw new Error('illegal combo');
+    for (const id of cardIds) { const idx = hand.findIndex(c => c.id === id); hand.splice(idx, 1); }
     for (const c of cards) this.discard.push(c);
-    const lastCard = cards[cards.length - 1];
-    this.currentColor = lastCard.color === 'wild' ? (chosenColor || mostCommonColor(hand)) : lastCard.color;
+    this.currentColor = cards[cards.length - 1].color;
     if (hand.length === 0) {
       this.roundOver = true; this.winnerIdx = playerIdx; this.applyScoring(playerIdx);
       return { effect: 'win', count: cards.length };
     }
     if (hand.length === 1) this.unoCalled[playerIdx] = false;
-    let skipCount = 1, effect = 'normal';
-    if (lastCard.value === 'reverse') {
-      this.direction *= -1;
-      if (this.numPlayers === 2) skipCount = 2;
-      effect = 'reverse';
-    } else if (lastCard.value === 'skip') { skipCount = 2; effect = 'skip'; }
-    else if (lastCard.value === 'draw2') {
-      const targetIdx = this.nextIndex(playerIdx, this.direction, 1);
-      this.drawCards(targetIdx, 2); skipCount = 2; effect = 'draw2';
-    } else if (lastCard.value === 'wild4') {
-      const targetIdx = this.nextIndex(playerIdx, this.direction, 1);
-      this.drawCards(targetIdx, 4); skipCount = 2; effect = 'wild4';
-    } else if (lastCard.value === 'wild') { effect = 'wild'; }
-    this.currentPlayerIdx = this.nextIndex(playerIdx, this.direction, skipCount);
+    this.currentPlayerIdx = this.nextIndex(playerIdx, this.direction, 1);
     this.turnCount++;
-    return { effect, count: cards.length };
+    return { effect: 'combo', count: cards.length };
   }
   applyScoring(winnerIdx) {
+    let total = 0;
     for (let p = 0; p < this.numPlayers; p++) { if (p === winnerIdx) continue; for (const c of this.hands[p]) total += cardScoreValue(c); }
     this.scores[winnerIdx] += total;
   }
@@ -580,15 +612,18 @@ function createApp(env) {
   app.gameStarted = false; app.myGuestIdx = null; app.hostConn = null; app.lastReceivedState = null;
   app.botTimer = null; app.pendingDrawFor = null;
 
-  function describeEvent(actorName, card, effect, comboCount) {
-    const tag = (comboCount && comboCount > 1) ? (' (combo ' + comboCount + ' kartu!)') : '';
-    if (effect === 'win') return actorName + ' menang ronde ini!' + tag;
-    if (effect === 'skip') return actorName + ' memainkan Skip!' + tag;
-    if (effect === 'reverse') return actorName + ' membalik arah!' + tag;
-    if (effect === 'draw2') return actorName + ' memainkan +2!' + tag;
-    if (effect === 'wild4') return actorName + ' memainkan Wild +4!' + tag;
-    if (effect === 'wild') return actorName + ' memainkan Wild.' + tag;
-    return actorName + ' bermain ' + card.color + ' ' + card.value + '.' + tag;
+  function describeEvent(actorName, card, effect) {
+    if (effect === 'win') return actorName + ' menang ronde ini!';
+    if (effect === 'skip') return actorName + ' memainkan Skip!';
+    if (effect === 'reverse') return actorName + ' membalik arah!';
+    if (effect === 'draw2') return actorName + ' memainkan +2!';
+    if (effect === 'wild4') return actorName + ' memainkan Wild +4!';
+    if (effect === 'wild') return actorName + ' memainkan Wild.';
+    return actorName + ' bermain ' + card.color + ' ' + card.value + '.';
+  }
+  function describeComboEvent(actorName, res) {
+    if (res.effect === 'win') return actorName + ' menang ronde ini dengan kombo ' + res.count + ' kartu!';
+    return actorName + ' memainkan kombo ' + res.count + ' kartu sekaligus!';
   }
 
   function offlineViewState() {
@@ -653,11 +688,12 @@ function createApp(env) {
   }
   app.localPlay = localPlay;
 
-  function localPlayCombo(actorIdx, cardIds, chosenColor) {
+  function localPlayCombo(actorIdx, cardIds) {
     app.pendingDrawFor = null;
-    const res = app.localGame.playCombo(actorIdx, cardIds, chosenColor);
-    const card = app.localGame.discard[app.localGame.discard.length - 1];
-    broadcastAndRender(describeEvent(app.seats[actorIdx].name, card, res.effect, res.count));
+    let res;
+    try { res = app.localGame.playCombo(actorIdx, cardIds); }
+    catch (e) { renderAll('Kombo tidak valid — kartu itu tidak bisa dimainkan bersama.'); return; }
+    broadcastAndRender(describeComboEvent(app.seats[actorIdx].name, res));
   }
   app.localPlayCombo = localPlayCombo;
 
@@ -711,10 +747,10 @@ function createApp(env) {
     const actorIdx = (app.mode === 'online' && app.onlineRole === 'host') ? 0 : app.localGame.currentPlayerIdx;
     localPlay(actorIdx, cardId, chosenColor);
   };
-  app.requestPlayCombo = function (cardIds, chosenColor) {
-    if (app.mode === 'online' && app.onlineRole === 'guest') { env.sendToConn(app.hostConn, { msgType: 'action', action: 'playCombo', cardIds, chosenColor }); return; }
+  app.requestPlayCombo = function (cardIds) {
+    if (app.mode === 'online' && app.onlineRole === 'guest') { env.sendToConn(app.hostConn, { msgType: 'action', action: 'playCombo', cardIds }); return; }
     const actorIdx = (app.mode === 'online' && app.onlineRole === 'host') ? 0 : app.localGame.currentPlayerIdx;
-    localPlayCombo(actorIdx, cardIds, chosenColor);
+    localPlayCombo(actorIdx, cardIds);
   };
   app.requestDraw = function () {
     if (app.mode === 'online' && app.onlineRole === 'guest') { env.sendToConn(app.hostConn, { msgType: 'action', action: 'draw' }); return; }
@@ -747,7 +783,7 @@ function createApp(env) {
       if (!app.gameStarted || !app.localGame || app.localGame.roundOver) return;
       if (app.localGame.currentPlayerIdx !== seatIdx) return;
       if (msg.action === 'play') localPlay(seatIdx, msg.cardId, msg.chosenColor);
-      else if (msg.action === 'playCombo') localPlayCombo(seatIdx, msg.cardIds, msg.chosenColor);
+      else if (msg.action === 'playCombo') localPlayCombo(seatIdx, msg.cardIds);
       else if (msg.action === 'draw') localDraw(seatIdx);
       else if (msg.action === 'pass') localPass(seatIdx);
       else if (msg.action === 'callUno') localCallUno(seatIdx);
@@ -806,97 +842,21 @@ let lastTurnPlayerIdx = null;
 let handoffActive = false;
 let pendingHandoffView = null;
 let turnToastTimer = null;
-let selectedCombo = [];
-let lastRenderedView = null;
-let lastDiscardCount = null;
-let throwsFinishAt = 0;
-let roundOverPending = false;
-let roundToken = 0;
-
-/* ---- Kahoot-style cartoon buddy avatars, one per seat index (max 8 seats) ---- */
-const CHAR_COLORS = ['#e6635c','#4fa8de','#f0b23e','#5fbf78','#b47ee0','#e0709c','#3fd1c0','#e2954a'];
-function characterSVG(idx, size){
-  size = size || 40;
-  const n = ((idx % 8) + 8) % 8;
-  const col = CHAR_COLORS[n];
-  let accessory = '';
-  if (n === 0) accessory = '<path d="M14,20 Q9,3 24,15 Z" fill="'+col+'"/><path d="M50,20 Q55,3 40,15 Z" fill="'+col+'"/>';
-  else if (n === 1) { accessory = '<line x1="32" y1="10" x2="32" y2="1" stroke="'+col+'" stroke-width="3"/><circle cx="32" cy="1" r="4" fill="'+col+'"/>'; }
-  else if (n === 3) accessory = '<rect x="8" y="7" width="48" height="7" rx="3.5" fill="'+col+'"/>';
-  else if (n === 4) accessory = '<path d="M18,15 L11,2 L25,11 Z" fill="'+col+'"/><path d="M46,15 L53,2 L39,11 Z" fill="'+col+'"/>';
-  else if (n === 5) accessory = '<ellipse cx="9" cy="32" rx="6.5" ry="11" fill="'+col+'"/>';
-  else if (n === 6) accessory = '<path d="M22,11 L32,-4 L42,11 Z" fill="'+col+'"/>';
-  else if (n === 7) accessory = '<path d="M18,7 Q25,-2 32,7 Q39,-2 46,7 L38,15 L32,10 L26,15 Z" fill="'+col+'"/>';
-  const eyes = (n === 2)
-    ? '<circle cx="32" cy="30" r="7.5" fill="#fff"/><circle cx="32" cy="30" r="3.4" fill="#22201c"/>'
-    : '<circle cx="24" cy="30" r="5.5" fill="#fff"/><circle cx="24" cy="30" r="2.6" fill="#22201c"/>' +
-      '<circle cx="40" cy="30" r="5.5" fill="#fff"/><circle cx="40" cy="30" r="2.6" fill="#22201c"/>';
-  return '<svg viewBox="0 0 64 64" width="'+size+'" height="'+size+'">' + accessory +
-    '<circle cx="32" cy="35" r="24" fill="'+col+'"/>' + eyes +
-    '<path d="M23,45 Q32,51 41,45" stroke="#22201c" stroke-width="2.6" fill="none" stroke-linecap="round"/>' +
-    '<ellipse cx="18" cy="42" rx="4" ry="2.6" fill="#000" opacity="0.12"/><ellipse cx="46" cy="42" rx="4" ry="2.6" fill="#000" opacity="0.12"/>' +
-    '</svg>';
+let comboMode = false;
+let comboSelectedIds = [];
+function hasComboOpportunity(hand, topCard, currentColor){
+  const groups = {};
+  for (const c of hand) {
+    if (c.value >= '0' && c.value <= '9') { (groups[c.value] = groups[c.value] || []).push(c); }
+  }
+  return Object.keys(groups).some(v => {
+    const group = groups[v];
+    if (group.length < 2) return false;
+    return group.some(c => canPlay(c, topCard, currentColor));
+  });
 }
 
 function isMyTurnNow(view){ return view.yourIdx === view.currentPlayerIdx; }
-
-/* ---- Card-throw animation: flies a floating card from a source rect to the discard pile ---- */
-function animateThrow(fromRect, toRect, card, faceDown, delay){
-  if (!fromRect || !toRect) return;
-  const finishAt = Date.now() + (delay || 0) + 480;
-  if (finishAt > throwsFinishAt) throwsFinishAt = finishAt;
-  const clone = document.createElement('div');
-  clone.className = 'thrown-card';
-  clone.style.left = fromRect.left + 'px';
-  clone.style.top = fromRect.top + 'px';
-  clone.style.width = fromRect.width + 'px';
-  clone.style.height = fromRect.height + 'px';
-  clone.innerHTML = (faceDown || !card) ? cardSVG(null, true) : cardSVG(card, false);
-  document.body.appendChild(clone);
-  const dx = (toRect.left + toRect.width / 2) - (fromRect.left + fromRect.width / 2);
-  const dy = (toRect.top + toRect.height / 2) - (fromRect.top + fromRect.height / 2);
-  const rot = (Math.random() * 46 - 23).toFixed(1);
-  setTimeout(() => {
-    requestAnimationFrame(() => {
-      clone.style.transform = 'translate(' + dx + 'px,' + dy + 'px) rotate(' + rot + 'deg) scale(0.8)';
-      clone.style.opacity = '0.15';
-    });
-  }, delay || 0);
-  setTimeout(() => clone.remove(), (delay || 0) + 480);
-}
-
-function pileTargetRect(){
-  const pileEl = document.querySelector('#pileArea .pile-stack:last-child');
-  return pileEl ? pileEl.getBoundingClientRect() : null;
-}
-
-/* Throws your own selected card(s) from their hand position, then submits the move. */
-function playWithThrow(ids, chosenColor, view){
-  const items = ids.map(id => {
-    const el = document.querySelector('.hand-card[data-card="' + id + '"]');
-    return { rect: el ? el.getBoundingClientRect() : null, card: view.yourHand.find(c => c.id === id) };
-  });
-  selectedCombo = [];
-  if (chosenColor !== undefined) app.requestPlayCombo(ids, chosenColor);
-  else app.requestPlayCombo(ids);
-  const toRect = pileTargetRect();
-  if (toRect) items.forEach((it, i) => { if (it.rect) animateThrow(it.rect, toRect, it.card, false, i * 90); });
-}
-
-/* Throws a face-down card from an opponent/bot's avatar chip when their turn just resolved. */
-function maybeAnimateRemoteThrow(view, priorActorIdx, count){
-  if (priorActorIdx == null) return;
-  const seat = view.seats[priorActorIdx];
-  if (!seat) return;
-  const isSelfPlay = app.mode === 'offline' ? (seat.type !== 'bot') : (priorActorIdx === view.yourIdx);
-  if (isSelfPlay) return;
-  const originEl = document.querySelector('.opp-chip[data-seat="' + priorActorIdx + '"] .opp-avatar');
-  const toRect = pileTargetRect();
-  if (!originEl || !toRect) return;
-  const fromRect = originEl.getBoundingClientRect();
-  const n = Math.max(1, Math.min(count || 1, 4));
-  for (let i = 0; i < n; i++) animateThrow(fromRect, toRect, null, true, i * 110);
-}
 
 /* ---- Turn label: who's actually up (bot / named local player / you) ---- */
 function turnLabel(view){
@@ -914,17 +874,20 @@ function turnLabel(view){
 }
 
 /* ---- Toast notification whenever the active turn changes ---- */
-function showTurnToast(text){
+function showTurnToast(text, idx, isBot){
   const el = document.getElementById('turnToast');
-  el.textContent = text;
+  const avatar = (idx == null) ? '' : avatarSVG(idx, !!isBot, 22);
+  el.innerHTML = avatar ? ('<span class="tt-row">'+avatar+'<span>'+escapeText(text)+'</span></span>') : escapeText(text);
   el.classList.add('show');
   clearTimeout(turnToastTimer);
   turnToastTimer = setTimeout(() => el.classList.remove('show'), 1800);
 }
 
 /* ---- Pass-and-play overlay for local hotseat turns (offline, 2+ human seats) ---- */
-function showPassOverlay(name){
+function showPassOverlay(name, idx){
   document.getElementById('passOverlayTitle').textContent = 'Giliran ' + name;
+  const avatarWrap = document.getElementById('passOverlayAvatar');
+  avatarWrap.innerHTML = (idx == null) ? '' : avatarSVG(idx, false, 72);
   document.getElementById('passOverlay').classList.add('show');
 }
 
@@ -939,15 +902,13 @@ function handleTurnChange(view, eventText){
 
   if (app.mode === 'offline') {
     const humanSeatCount = view.seats.filter(s => s.type === 'human').length;
-    if (seat.type === 'human' && humanSeatCount > 1) return { gate:true, name: seat.name };
-    showTurnToast(seat.type === 'bot' ? ('Giliran ' + seat.name + ' \uD83E\uDD16') : 'Giliranmu!');
+    if (seat.type === 'human' && humanSeatCount > 1) return { gate:true, name: seat.name, idx: idx };
+    showTurnToast(seat.type === 'bot' ? ('Giliran ' + seat.name) : 'Giliranmu!', idx, seat.type === 'bot');
     return { gate:false };
   }
 
-  const label = seat.type === 'bot'
-    ? ('Giliran ' + seat.name + ' \uD83E\uDD16')
-    : (idx === view.yourIdx ? 'Giliranmu!' : 'Giliran ' + seat.name);
-  showTurnToast(label);
+  const label = seat.type === 'bot' ? ('Giliran ' + seat.name) : (idx === view.yourIdx ? 'Giliranmu!' : 'Giliran ' + seat.name);
+  showTurnToast(label, idx, seat.type === 'bot');
   return { gate:false };
 }
 
@@ -959,7 +920,7 @@ function renderOpponents(view){
     const s = view.seats[i];
     const active = i === view.currentPlayerIdx;
     const cls = 'opp-chip' + (active ? ' active-turn' : '') + (s.type === 'bot' ? ' type-bot' : '') + (s.connected === false ? ' disconnected' : '');
-    html += '<div class="'+cls+'" data-seat="'+i+'"><div class="opp-avatar">'+characterSVG(i,28)+'</div><div class="opp-info"><div class="opp-name">'+escapeText(s.name)+'</div><div class="opp-count">'+s.count+' kartu'+(s.type==='bot'?' · Bot':'')+'</div></div></div>';
+    html += '<div class="'+cls+'"><div class="opp-avatar">'+avatarSVG(i, s.type==='bot', 34)+'</div><div class="opp-info"><div class="opp-name">'+escapeText(s.name)+'</div><div class="opp-count">'+s.count+' kartu'+(s.type==='bot'?' · Bot':'')+'</div></div></div>';
   }
   row.innerHTML = html;
 }
@@ -974,93 +935,88 @@ function renderPiles(view){
     '<div class="pile-stack"><div class="color-ring" style="border-color:'+ringColor+'"></div>' + cardSVG(view.discardTop, false) + '</div>';
 }
 
-function renderYouBadge(view){
-  const el = document.getElementById('youBadge');
-  const isActive = isMyTurnNow(view) && !view.roundOver;
-  el.className = 'you-badge' + (isActive ? ' active-turn' : '');
-  const name = (view.seats[view.yourIdx] && view.seats[view.yourIdx].name) || 'Kamu';
-  el.innerHTML = '<div class="opp-avatar">'+characterSVG(view.yourIdx,30)+'</div><div class="you-name">'+escapeText(name)+'</div>';
-}
-
 function renderHand(view){
-  lastRenderedView = view;
   const wrap = document.getElementById('handWrap');
   const canAct = isMyTurnNow(view) && !view.roundOver;
-  if (!canAct) selectedCombo = [];
-  const baseCard = selectedCombo.length ? view.yourHand.find(c => c.id === selectedCombo[0]) : null;
+  const pending = canAct && view.pendingDrawFor === view.yourIdx;
+
+  if (comboMode && canAct && !pending) {
+    const firstCard = comboSelectedIds.length ? view.yourHand.find(c => c.id === comboSelectedIds[0]) : null;
+    const selectedValue = firstCard ? firstCard.value : null;
+    wrap.innerHTML = view.yourHand.map(c => {
+      const isNumeric = c.value >= '0' && c.value <= '9';
+      const isSelected = comboSelectedIds.includes(c.id);
+      const canSelect = isNumeric && (selectedValue === null || c.value === selectedValue);
+      const cls = 'hand-card ' + (isSelected ? 'combo-selected' : (canSelect ? 'playable' : 'notplayable'));
+      const badge = isSelected ? '<div class="combo-badge">'+(comboSelectedIds.indexOf(c.id)+1)+'</div>' : '';
+      return '<div class="'+cls+'" data-card="'+c.id+'">'+cardSVG(c,false)+badge+'</div>';
+    }).join('');
+    [...wrap.children].forEach(el => {
+      el.addEventListener('click', () => {
+        const id = Number(el.getAttribute('data-card'));
+        const card = view.yourHand.find(c => c.id === id);
+        if (!card) return;
+        const sel = comboSelectedIds.indexOf(id);
+        if (sel !== -1) { comboSelectedIds.splice(sel, 1); renderTable(view, ''); return; }
+        const isNumeric = card.value >= '0' && card.value <= '9';
+        if (!isNumeric) return;
+        if (comboSelectedIds.length) {
+          const fc = view.yourHand.find(c => c.id === comboSelectedIds[0]);
+          if (card.value !== fc.value) return;
+        }
+        comboSelectedIds.push(id);
+        renderTable(view, '');
+      });
+    });
+    return;
+  }
+
   wrap.innerHTML = view.yourHand.map(c => {
-    const isSelected = selectedCombo.includes(c.id);
-    let playable;
-    if (baseCard) playable = canAct && (isSelected || c.value === baseCard.value);
-    else playable = canAct && canPlay(c, view.discardTop, view.currentColor);
-    const cls = 'hand-card ' + (playable?'playable':'notplayable') + (isSelected ? ' selected' : '');
-    return '<div class="'+cls+'" data-card="'+c.id+'">'+cardSVG(c,false)+'</div>';
+    const playable = canAct && canPlay(c, view.discardTop, view.currentColor);
+    return '<div class="hand-card '+(playable?'playable':'notplayable')+'" data-card="'+c.id+'">'+cardSVG(c,false)+'</div>';
   }).join('');
   [...wrap.children].forEach(el => {
     el.addEventListener('click', () => {
       if (!el.classList.contains('playable')) return;
       const id = Number(el.getAttribute('data-card'));
-      onHandCardTap(id, view);
+      const card = view.yourHand.find(c => c.id === id);
+      if (!card) return;
+      if (card.color === 'wild') openColorPicker(id);
+      else app.requestPlay(id);
     });
   });
-  renderComboBar();
 }
-
-function onHandCardTap(id, view){
-  const card = view.yourHand.find(c => c.id === id);
-  if (!card) return;
-  if (selectedCombo.length === 0) {
-    if (!canPlay(card, view.discardTop, view.currentColor)) return;
-    const siblings = view.yourHand.filter(c => c.value === card.value && c.id !== card.id);
-    if (siblings.length === 0) {
-      if (card.color === 'wild') openColorPicker([id], view);
-      else playWithThrow([id], undefined, view);
-      return;
-    }
-    selectedCombo = [id];
-    renderHand(view);
-    return;
-  }
-  if (selectedCombo.includes(id)) {
-    selectedCombo = (selectedCombo[0] === id) ? [] : selectedCombo.filter(x => x !== id);
-    renderHand(view);
-    return;
-  }
-  selectedCombo.push(id);
-  renderHand(view);
-}
-
-function renderComboBar(){
-  const bar = document.getElementById('comboBar');
-  if (selectedCombo.length === 0) { bar.style.display = 'none'; return; }
-  bar.style.display = 'flex';
-  document.getElementById('btnPlayCombo').textContent = 'Mainkan (' + selectedCombo.length + ')';
-}
-
-document.getElementById('btnCancelCombo').addEventListener('click', () => {
-  selectedCombo = [];
-  if (lastRenderedView) { renderHand(lastRenderedView); renderActions(lastRenderedView); }
-});
-document.getElementById('btnPlayCombo').addEventListener('click', () => {
-  if (selectedCombo.length === 0 || !lastRenderedView) return;
-  const ids = selectedCombo.slice();
-  const firstCard = lastRenderedView.yourHand.find(c => c.id === ids[0]);
-  if (firstCard && firstCard.color === 'wild') openColorPicker(ids, lastRenderedView);
-  else playWithThrow(ids, undefined, lastRenderedView);
-});
 
 function renderActions(view){
   const canAct = isMyTurnNow(view) && !view.roundOver;
   const pending = canAct && view.pendingDrawFor === view.yourIdx;
-  const comboMode = selectedCombo.length > 0;
+  if (!canAct) { comboMode = false; comboSelectedIds = []; }
+
   const btnDraw = document.getElementById('btnDraw');
   const btnPass = document.getElementById('btnPass');
+  const btnCombo = document.getElementById('btnCombo');
+  const btnComboPlay = document.getElementById('btnComboPlay');
+  const btnComboCancel = document.getElementById('btnComboCancel');
+
+  const showComboToggle = canAct && !pending && !comboMode && hasComboOpportunity(view.yourHand, view.discardTop, view.currentColor);
   btnDraw.style.display = (canAct && !pending && !comboMode) ? '' : 'none';
   btnPass.style.display = (pending && !comboMode) ? '' : 'none';
+  btnCombo.style.display = showComboToggle ? '' : 'none';
+  btnComboPlay.style.display = comboMode ? '' : 'none';
+  btnComboCancel.style.display = comboMode ? '' : 'none';
+
+  if (comboMode) {
+    const legal = comboSelectedIds.some(id => {
+      const c = view.yourHand.find(x => x.id === id);
+      return c && canPlay(c, view.discardTop, view.currentColor);
+    });
+    btnComboPlay.disabled = !legal;
+    btnComboPlay.textContent = 'Mainkan Kombo' + (comboSelectedIds.length ? ' ('+comboSelectedIds.length+')' : '');
+  }
 
   const unoBtn = document.getElementById('btnCallUno');
   const showUno = view.yourHand.length === 1 && !view.unoCalled[view.yourIdx] && !view.roundOver;
-  unoBtn.classList.toggle('show', showUno && !comboMode);
+  unoBtn.classList.toggle('show', showUno);
 }
 
 function renderStatus(view, eventText){
@@ -1083,7 +1039,7 @@ function renderScore(view){
   if (!view || !scoreVisible) { card.style.display='none'; return; }
   card.style.display = '';
   document.getElementById('scoreList').innerHTML = view.seats.map((s,i) =>
-    '<div class="srow"><span>'+escapeText(s.name)+'</span><span>'+(view.scores?view.scores[i]:0)+'</span></div>'
+    '<div class="srow"><span class="sname">'+avatarSVG(i, s.type==='bot', 20)+escapeText(s.name)+'</span><span>'+(view.scores?view.scores[i]:0)+'</span></div>'
   ).join('');
 }
 
@@ -1098,7 +1054,7 @@ function pushEvent(text){
   el.scrollTop = el.scrollHeight;
 }
 
-function openColorPicker(cardIds, view){
+function openColorPicker(cardId){
   const overlay = document.getElementById('colorOverlay');
   const wrap = document.getElementById('colorChoices');
   wrap.innerHTML = '';
@@ -1106,7 +1062,7 @@ function openColorPicker(cardIds, view){
     const btn = document.createElement('button');
     btn.className = 'color-swatch';
     btn.style.background = { red:'#dd3b3b', yellow:'#f0c419', green:'#37a350', blue:'#2f6fdb' }[col];
-    btn.addEventListener('click', () => { overlay.classList.remove('show'); playWithThrow(cardIds, col, view); });
+    btn.addEventListener('click', () => { overlay.classList.remove('show'); app.requestPlay(cardId, col); });
     wrap.appendChild(btn);
   });
   overlay.classList.add('show');
@@ -1114,32 +1070,19 @@ function openColorPicker(cardIds, view){
 
 function showRoundOverIfNeeded(view){
   const overlay = document.getElementById('roundOverOverlay');
-  if (!view || !view.roundOver) { overlay.classList.remove('show'); roundOverPending = false; return; }
-  if (overlay.classList.contains('show') || roundOverPending) return;
-  roundOverPending = true;
-  const myToken = roundToken;
-  const wait = Math.max(320, throwsFinishAt - Date.now() + 80);
-  setTimeout(() => {
-    roundOverPending = false;
-    if (myToken !== roundToken) return;
-    const winnerName = view.seats[view.winnerIdx] ? view.seats[view.winnerIdx].name : '?';
-    document.getElementById('roundOverText').textContent = winnerName + ' menang ronde ini!';
-    document.getElementById('roundScoreList').innerHTML = view.seats.map((s,i) =>
-      '<div class="srow" style="display:flex;justify-content:space-between;padding:3px 0;"><span>'+escapeText(s.name)+'</span><span>'+(view.scores?view.scores[i]:0)+'</span></div>'
-    ).join('');
-    const canControlNext = !(app.mode === 'online' && app.onlineRole === 'guest');
-    document.getElementById('btnNextRound').style.display = canControlNext ? '' : 'none';
-    overlay.classList.add('show');
-  }, wait);
+  if (!view || !view.roundOver) { overlay.classList.remove('show'); return; }
+  const winnerName = view.seats[view.winnerIdx] ? view.seats[view.winnerIdx].name : '?';
+  document.getElementById('roundOverText').textContent = winnerName + ' menang ronde ini!';
+  document.getElementById('roundScoreList').innerHTML = view.seats.map((s,i) =>
+    '<div class="srow" style="display:flex;justify-content:space-between;padding:3px 0;"><span>'+escapeText(s.name)+'</span><span>'+(view.scores?view.scores[i]:0)+'</span></div>'
+  ).join('');
+  const canControlNext = !(app.mode === 'online' && app.onlineRole === 'guest');
+  document.getElementById('btnNextRound').style.display = canControlNext ? '' : 'none';
+  overlay.classList.add('show');
 }
 
 function renderTable(view, eventText){
   if (!view) return;
-  const isNewGameEvent = (eventText === 'Permainan dimulai!' || eventText === 'Ronde baru dimulai!');
-  if (isNewGameEvent) roundToken++;
-  const priorActorIdx = lastTurnPlayerIdx;
-  const priorDiscardCount = isNewGameEvent ? null : lastDiscardCount;
-  lastDiscardCount = view.discardCount;
   if (handoffActive) {
     pendingHandoffView = view;
   } else {
@@ -1147,21 +1090,19 @@ function renderTable(view, eventText){
     if (res.gate) {
       handoffActive = true;
       pendingHandoffView = view;
-      selectedCombo = [];
-      showPassOverlay(res.name);
-    } else if (priorDiscardCount != null && view.discardCount > priorDiscardCount) {
-      maybeAnimateRemoteThrow(view, priorActorIdx, view.discardCount - priorDiscardCount);
+      showPassOverlay(res.name, res.idx);
     }
   }
   renderOpponents(view);
   renderPiles(view);
-  renderYouBadge(view);
   if (handoffActive) {
     document.getElementById('handWrap').innerHTML = '';
     document.getElementById('btnDraw').style.display = 'none';
     document.getElementById('btnPass').style.display = 'none';
+    document.getElementById('btnCombo').style.display = 'none';
+    document.getElementById('btnComboPlay').style.display = 'none';
+    document.getElementById('btnComboCancel').style.display = 'none';
     document.getElementById('btnCallUno').classList.remove('show');
-    document.getElementById('comboBar').style.display = 'none';
   } else {
     renderHand(view);
     renderActions(view);
@@ -1294,7 +1235,8 @@ function renderRoster(seats){
     if (isHost && i>0 && s.type!=='human') {
       toggle = '<button class="tiny-toggle" data-seat="'+i+'">'+(s.type==='bot'?'Jadikan Terbuka':'Jadikan Bot')+'</button>';
     }
-    return '<div class="roster-row"><span class="dot '+dotCls+'"></span><span class="rname">'+escapeText(label)+'</span>'+toggle+'</div>';
+    const avatar = s.type === 'open' ? '' : '<span class="roster-avatar">'+avatarSVG(i, s.type==='bot', 24)+'</span>';
+    return '<div class="roster-row"><span class="dot '+dotCls+'"></span>'+avatar+'<span class="rname">'+escapeText(label)+'</span>'+toggle+'</div>';
   }).join('');
   if (isHost) {
     wrap.querySelectorAll('.tiny-toggle').forEach(b => {
@@ -1388,8 +1330,7 @@ function backToMenu(){
   teardownPeer();
   if (app.botTimer) { clearTimeout(app.botTimer); app.botTimer = null; }
   app.mode='offline'; app.onlineRole=null; app.seats=[]; app.localGame=null; app.gameStarted=false;
-  handoffActive = false; pendingHandoffView = null; lastTurnPlayerIdx = null; selectedCombo = []; lastRenderedView = null; lastDiscardCount = null;
-  roundOverPending = false; roundToken++;
+  handoffActive = false; pendingHandoffView = null; lastTurnPlayerIdx = null;
   document.getElementById('passOverlay').classList.remove('show');
   document.getElementById('turnToast').classList.remove('show');
   document.getElementById('onlineLobby').style.display='none';
@@ -1412,6 +1353,20 @@ document.getElementById('btnExitGame').addEventListener('click', () => {
 /* ============================= IN-GAME ACTION BUTTONS ============================= */
 document.getElementById('btnDraw').addEventListener('click', () => app.requestDraw());
 document.getElementById('btnPass').addEventListener('click', () => app.requestPass());
+document.getElementById('btnCombo').addEventListener('click', () => {
+  comboMode = true; comboSelectedIds = [];
+  renderTable(app.getViewState(), '');
+});
+document.getElementById('btnComboCancel').addEventListener('click', () => {
+  comboMode = false; comboSelectedIds = [];
+  renderTable(app.getViewState(), '');
+});
+document.getElementById('btnComboPlay').addEventListener('click', () => {
+  if (comboSelectedIds.length === 0) return;
+  const ids = comboSelectedIds.slice();
+  comboMode = false; comboSelectedIds = [];
+  app.requestPlayCombo(ids);
+});
 document.getElementById('btnCallUno').addEventListener('click', () => { app.requestCallUno(); document.getElementById('btnCallUno').classList.remove('show'); });
 document.getElementById('btnNextRound').addEventListener('click', () => {
   if (app.mode === 'online' && app.onlineRole === 'guest') return;

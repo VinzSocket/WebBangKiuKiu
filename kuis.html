@@ -88,6 +88,7 @@
   .diff-btn:disabled{opacity:.35; box-shadow:none;}
   .diff-btn:active{transform:scale(.97);}
   .diff-btn.extreme-span{grid-column:1 / span 2;}
+  .diff-btn.random-span{grid-column:1 / span 2; background:linear-gradient(90deg,#e21b3c,#ca8a04,#26890c,#1368ce) !important; margin-top:2px;}
   .waiting-block{text-align:center; padding:30px 10px; color:var(--muted);}
   .waiting-block .wi{display:flex; justify-content:center; margin-bottom:8px; animation:pulse 1.4s ease-in-out infinite;}
   @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.4;}}
@@ -142,7 +143,16 @@
   .my-score-solo .l{font-size:12px; color:var(--muted); font-weight:700;}
 
   /* ---- stage & character cards (kartu anime melompat ke panggung) ---- */
-  .stage{display:flex; align-items:flex-end; justify-content:center; gap:10px; margin-bottom:6px; padding-top:34px;}
+  .stage-wrap{position:relative; overflow:hidden;}
+  .confetti-layer{position:absolute; top:-14px; left:0; right:0; height:230px; overflow:hidden; pointer-events:none; z-index:0;}
+  .confetti-piece{position:absolute; top:-16px; width:7px; height:13px; border-radius:2px; animation-name:confettiFall; animation-timing-function:linear; animation-iteration-count:infinite;}
+  @keyframes confettiFall{
+    0%{ transform:translateY(-16px) rotate(0deg); opacity:1; }
+    85%{ opacity:1; }
+    100%{ transform:translateY(280px) rotate(500deg); opacity:0; }
+  }
+  @keyframes charBounce{ 0%,100%{ transform:translateY(0) rotate(0deg); } 50%{ transform:translateY(-5px) rotate(-4deg); } }
+  .stage{display:flex; align-items:flex-end; justify-content:center; gap:10px; margin-bottom:6px; padding-top:34px; position:relative; z-index:1;}
   .stage-col{display:flex; flex-direction:column; align-items:center; width:96px;}
   @keyframes cardJumpIn{
     0%{ transform:translateY(170px) scale(.5) rotate(-12deg); opacity:0; }
@@ -159,7 +169,7 @@
   .char-card.rarity-purple{background:linear-gradient(160deg,#c9bcfb,#7c3aed); border:3px solid #ede9fe;}
   .char-card .cc-badge{position:absolute; top:-13px; left:50%; transform:translateX(-50%); z-index:2; filter:drop-shadow(0 3px 4px rgba(0,0,0,.3));}
   .char-card .cc-sparkle{position:absolute; inset:0;}
-  .char-card .cc-avatar{width:58px; height:58px; margin:8px auto 6px; position:relative; z-index:1; filter:drop-shadow(0 3px 5px rgba(0,0,0,.35));}
+  .char-card .cc-avatar{width:58px; height:58px; margin:8px auto 6px; position:relative; z-index:1; filter:drop-shadow(0 3px 5px rgba(0,0,0,.35)); animation-name:charBounce; animation-duration:1s; animation-timing-function:ease-in-out; animation-iteration-count:infinite;}
   .char-card .cc-name{font-size:12px; font-weight:800; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.45); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; position:relative; z-index:1;}
   .char-card .cc-score{font-size:11px; font-weight:700; color:rgba(255,255,255,.92); position:relative; z-index:1;}
   .plinth{width:88px; border-radius:10px 10px 4px 4px; margin-top:9px; display:flex; align-items:center; justify-content:center; font-weight:800; color:rgba(255,255,255,.85); font-size:13px; transform-origin:bottom; animation:plinthPop .4s ease-out both;}
@@ -406,7 +416,8 @@ var ICON_PATHS = {
   triangleShape: '<polygon points="12,4 21,20 3,20" fill="{c}"/>',
   diamondShape: '<polygon points="12,3 21,12 12,21 3,12" fill="{c}"/>',
   circleShape: '<circle cx="12" cy="12" r="9" fill="{c}"/>',
-  squareShape: '<rect x="4" y="4" width="16" height="16" rx="3" fill="{c}"/>'
+  squareShape: '<rect x="4" y="4" width="16" height="16" rx="3" fill="{c}"/>',
+  dice: '<rect x="3" y="3" width="18" height="18" rx="4" fill="{c}"/><circle cx="8.2" cy="8.2" r="1.6" fill="#20180a"/><circle cx="15.8" cy="8.2" r="1.6" fill="#20180a"/><circle cx="12" cy="12" r="1.6" fill="#20180a"/><circle cx="8.2" cy="15.8" r="1.6" fill="#20180a"/><circle cx="15.8" cy="15.8" r="1.6" fill="#20180a"/>'
 };
 function iconSVG(name, size, color){
   size = size || 20; color = color || 'currentColor';
@@ -429,14 +440,28 @@ function sparkleSVG(){
     '</svg>';
 }
 function characterCardHTML(seedIndex, name, score, rank, delay){
+  delay = delay||0;
   var rarity = rank===1 ? 'gold' : (rank===2 ? 'silver' : (rank===3 ? 'bronze' : 'purple'));
-  return '<div class="char-card rarity-'+rarity+'" style="animation-delay:'+(delay||0)+'s;">' +
+  return '<div class="char-card rarity-'+rarity+'" style="animation-delay:'+delay+'s;">' +
     '<div class="cc-badge">'+medalBadgeSVG(rank,26)+'</div>' +
     '<div class="cc-sparkle">'+sparkleSVG()+'</div>' +
-    '<div class="cc-avatar">'+avatarSVG(seedIndex,58)+'</div>' +
+    '<div class="cc-avatar" style="animation-delay:'+(delay+0.65)+'s;">'+avatarSVG(seedIndex,58)+'</div>' +
     '<div class="cc-name">'+escapeText(name)+'</div>' +
     '<div class="cc-score">'+score+' pts</div>' +
   '</div>';
+}
+function confettiHTML(count){
+  var colors = ['#e21b3c','#1368ce','#eab308','#26890c','#ff6bb0','#7c3aed'];
+  var pieces = '';
+  for (var i=0;i<count;i++){
+    var left = Math.round(Math.random()*100);
+    var color = colors[i % colors.length];
+    var dur = (1.6 + Math.random()*1.4).toFixed(2);
+    var delay = (Math.random()*1.8).toFixed(2);
+    var w = Math.random()<0.5 ? '7px' : '5px';
+    pieces += '<span class="confetti-piece" style="left:'+left+'%; background:'+color+'; width:'+w+'; animation-duration:'+dur+'s; animation-delay:'+delay+'s;"></span>';
+  }
+  return pieces;
 }
 
 /* ============================= QUIZ ENGINE (authoritative) ============================= */
@@ -487,6 +512,19 @@ QuizEngine.prototype.startQuestion = function(diff){
   this.currentQuestion = { qData:qData, startedAt:now, endsAt: now+limitMs, answers:{} };
   this.phase = 'question';
   return this.currentQuestion;
+};
+QuizEngine.prototype.totalRemaining = function(){
+  var n=0; for (var i=0;i<DIFFICULTIES.length;i++){ n += this.pools[DIFFICULTIES[i]].length; } return n;
+};
+QuizEngine.prototype.startRandomQuestion = function(){
+  var flat = [];
+  for (var i=0;i<DIFFICULTIES.length;i++){
+    var d = DIFFICULTIES[i];
+    for (var j=0;j<this.pools[d].length;j++) flat.push(d);
+  }
+  if (!flat.length) throw new Error('empty pool');
+  var pick = flat[Math.floor(Math.random()*flat.length)];
+  return this.startQuestion(pick);
 };
 QuizEngine.prototype.answeredCount = function(){
   return this.currentQuestion ? Object.keys(this.currentQuestion.answers).length : 0;
@@ -580,6 +618,7 @@ function buildPublicState(forPlayerId){
   } else if (e.phase === 'difficulty') {
     base.leaderboard = e.topSnapshot();
     base.allExhausted = e.allExhausted();
+    base.totalRemaining = e.totalRemaining();
   } else if (e.phase === 'question') {
     var cq = e.currentQuestion;
     base.difficulty = cq.qData.difficulty;
@@ -657,6 +696,11 @@ function hostSelectDifficulty(diff){
   hostBroadcastState();
   armAutoReveal(app.engine.currentQuestion.endsAt);
 }
+function hostSelectRandom(){
+  try { app.engine.startRandomQuestion(); } catch(e) { showToast('Semua 45 soal sudah dipakai.'); return; }
+  hostBroadcastState();
+  armAutoReveal(app.engine.currentQuestion.endsAt);
+}
 function hostForceReveal(){
   clearTimeout(autoRevealTimer);
   if (app.engine.phase !== 'question') return;
@@ -695,6 +739,11 @@ function guestSubmitAnswer(optionIndex){
 /* ============================= SOLO ACTIONS ============================= */
 function soloSelectDifficulty(diff){
   try { app.engine.startQuestion(diff); } catch(e) { showToast('Soal '+DIFF_LABEL[diff]+' sudah habis.'); return; }
+  armAutoReveal(app.engine.currentQuestion.endsAt);
+  render();
+}
+function soloSelectRandom(){
+  try { app.engine.startRandomQuestion(); } catch(e) { showToast('Semua 45 soal sudah dipakai.'); return; }
   armAutoReveal(app.engine.currentQuestion.endsAt);
   render();
 }
@@ -798,24 +847,29 @@ function renderLobby(state){
 
 function renderDifficulty(state){
   var canControl = (app.mode === 'host' || app.mode === 'solo');
+  var used = 45 - (state.totalRemaining==null ? 0 : state.totalRemaining);
   document.getElementById('diffTitle').textContent = state.questionNumber>0 ? 'Pilih Soal Berikutnya' : 'Pilih Soal Pertama';
-  document.getElementById('diffSub').textContent = canControl ? 'Pilih tingkat kesulitan.' : 'Host sedang memilih tingkat kesulitan.';
+  document.getElementById('diffSub').textContent = (canControl ? 'Pilih tingkat kesulitan.' : 'Host sedang memilih tingkat kesulitan.') + ' (' + used + '/45 soal sudah dimainkan)';
   document.getElementById('diffGrid').classList.toggle('hidden', !canControl || state.allExhausted);
   document.getElementById('waitingForHostBlock').classList.toggle('hidden', canControl);
   document.getElementById('exhaustedBlock').classList.toggle('hidden', !(canControl && state.allExhausted));
 
   if (canControl) {
     var grid = document.getElementById('diffGrid');
+    var totalRemaining = state.totalRemaining || 0;
     grid.innerHTML = DIFFICULTIES.map(function(d){
       var remaining = state.poolCounts[d];
       var extra = (d==='extreme') ? ' extreme-span' : '';
       return '<button class="diff-btn'+extra+'" data-diff="'+d+'" style="background:'+DIFF_COLOR[d]+'" '+(remaining<=0?'disabled':'')+'>' +
         '<span class="di">'+iconSVG(DIFF_ICON[d],22,'#fff')+'</span><span class="dn">'+DIFF_LABEL[d]+'</span><span class="dc">'+remaining+' soal tersisa</span></button>';
-    }).join('');
+    }).join('') + '<button class="diff-btn random-span" data-diff="__random__" '+(totalRemaining<=0?'disabled':'')+'>' +
+      '<span class="di">'+iconSVG('dice',22,'#fff')+'</span><span class="dn">Acak Semua Kesulitan</span><span class="dc">'+totalRemaining+' dari 45 soal tersisa</span></button>';
     Array.prototype.forEach.call(grid.querySelectorAll('.diff-btn'), function(btn){
       btn.addEventListener('click', function(){
         var d = btn.getAttribute('data-diff');
-        if (app.mode === 'host') hostSelectDifficulty(d); else soloSelectDifficulty(d);
+        if (d === '__random__') { if (app.mode === 'host') hostSelectRandom(); else soloSelectRandom(); }
+        else if (app.mode === 'host') hostSelectDifficulty(d);
+        else soloSelectDifficulty(d);
       });
     });
   }
@@ -927,7 +981,7 @@ function renderGameOver(state){
       return '<div class="stage-col col'+rank+'">' + body +
         '<div class="plinth plinth-'+rank+'" style="animation-delay:'+plinthDelay[rank]+'s">'+rank+'</div></div>';
     }
-    podiumArea.innerHTML = '<div class="stage">' + col(1,0) + col(2,1) + col(3,2) + '</div>';
+    podiumArea.innerHTML = '<div class="stage-wrap"><div class="confetti-layer">'+confettiHTML(26)+'</div><div class="stage">' + col(1,0) + col(2,1) + col(3,2) + '</div></div>';
     boardArea.innerHTML = (lb.length > 3) ? renderBoardHTML(lb.slice(3), 'Klasemen Selengkapnya') : '';
   }
   document.getElementById('btnPlayAgain').classList.toggle('hidden', !(app.mode==='host' || app.mode==='solo'));
