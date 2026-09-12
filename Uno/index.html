@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Studio UNO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Studio UNO</h1>
+    <p>Kartu full SVG &middot; Lawan bot, main bareng lokal, atau online sampai 8 pemain</p>
+  </header>
+
+  <div class="layout">
+    <div class="table-col">
+      <div class="conn-banner" id="connBanner"><span class="spinner sm"></span><span id="connBannerText">Menyambungkan ulang...</span></div>
+      <div id="opponentsRow"></div>
+      <div id="pileArea"></div>
+      <div class="status-bar" id="statusBar"></div>
+      <div id="handWrap"></div>
+      <div class="actions" id="turnActions" style="width:100%; max-width:580px;">
+        <button id="btnDraw">Ambil Kartu</button>
+        <button id="btnPass">Lewat</button>
+        <button id="btnCombo" style="display:none;">🔗 Kombo</button>
+        <button class="primary" id="btnComboPlay" style="display:none;">Mainkan Kombo</button>
+        <button id="btnComboCancel" style="display:none;">Batal</button>
+      </div>
+      <div class="actions exit-row" id="exitRow" style="width:100%; max-width:580px; margin-top:2px;">
+        <button class="danger" id="btnExitGame">Keluar Room</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="card" id="setupCard">
+        <h2>Mode</h2>
+        <div class="seg" id="modeSeg">
+          <button data-val="offline" class="active">Offline</button>
+          <button data-val="online">Online</button>
+        </div>
+
+        <div id="offlineSetup" class="row-gap">
+          <h2 style="margin-top:12px;">Jumlah Pemain</h2>
+          <div class="seg" id="countSeg">
+            <button data-val="2">2</button><button data-val="3">3</button><button data-val="4" class="active">4</button>
+            <button data-val="5">5</button><button data-val="6">6</button><button data-val="7">7</button><button data-val="8">8</button>
+          </div>
+          <div id="offlineSeatList" class="row-gap"></div>
+          <div class="actions row-gap"><button class="primary" id="btnStartOffline">Mulai Permainan</button></div>
+        </div>
+
+        <div id="onlineSetup" class="row-gap" style="display:none;">
+          <div id="onlineEntry">
+            <input id="playerNameInput" class="field-input" type="text" maxlength="14" placeholder="Nama kamu (opsional)" style="margin-bottom:8px;" autocomplete="off">
+            <h2 style="margin-top:6px;">Jumlah Pemain (jika buat room)</h2>
+            <div class="seg" id="hostCountSeg">
+              <button data-val="2">2</button><button data-val="3">3</button><button data-val="4" class="active">4</button>
+              <button data-val="5">5</button><button data-val="6">6</button><button data-val="7">7</button><button data-val="8">8</button>
+            </div>
+            <div class="actions row-gap"><button class="primary" id="btnCreateRoom">Buat Room Baru</button></div>
+            <div style="display:flex; gap:6px; margin-top:8px;">
+              <input id="joinCodeInput" class="field-input" type="text" maxlength="6" placeholder="KODE ROOM" style="text-transform:uppercase; letter-spacing:0.1em;">
+              <button id="btnJoinRoom" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 14px; border-radius:7px; font-weight:600; font-size:13.5px; cursor:pointer;">Gabung</button>
+            </div>
+            <div class="onlineBusyLine" id="onlineBusyLine"><span class="spinner sm"></span><span>Menghubungkan...</span></div>
+            <div id="onlineError"></div>
+          </div>
+
+          <div id="onlineLobby" style="display:none;">
+            <div class="room-code-box">
+              <div class="cap">Kode Room</div>
+              <div class="room-code-display" id="roomCodeDisplay">-----</div>
+              <div class="checkline" id="roomCodeWait" style="display:none; justify-content:center;"><span class="spinner sm"></span><span>Membuat room...</span></div>
+              <button class="copy-btn" id="btnCopyCode">Salin Kode</button>
+            </div>
+            <div id="rosterList" class="row-gap"></div>
+            <div class="actions row-gap" id="hostStartWrap" style="display:none;">
+              <button class="primary" id="btnStartOnline">Mulai Game</button>
+            </div>
+            <div id="guestWaitMsg" class="checkline" style="display:none; justify-content:center;"><span class="spinner sm"></span><span>Menunggu host memulai game...</span></div>
+            <div class="actions row-gap"><button class="danger" id="btnLeaveRoom">Keluar Room</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="scoreCard" style="display:none;">
+        <h2>Skor</h2>
+        <div id="scoreList"></div>
+      </div>
+
+      <div class="card" id="logCard" style="display:none;">
+        <h2>Kejadian</h2>
+        <div id="eventLog"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="uno-toast-btn" id="btnCallUno">UNO!</button>
+<div class="turn-toast" id="turnToast"></div>
+
+<div class="modal-overlay" id="passOverlay">
+  <div class="promo-box">
+    <div class="pass-avatar" id="passOverlayAvatar"></div>
+    <p id="passOverlayTitle">Giliran Pemain</p>
+    <div id="passOverlaySub" style="color:var(--text-muted); font-size:13px; margin-top:-8px; margin-bottom:16px;">Berikan perangkat ke pemain ini, lalu tekan tombol di bawah.</div>
+    <div class="actions">
+      <button class="primary" id="btnPassReady">Siap, Lihat Kartu</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="colorOverlay">
+  <div class="promo-box">
+    <p>Pilih warna</p>
+    <div class="color-choices" id="colorChoices"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="roundOverOverlay">
+  <div class="promo-box">
+    <p id="roundOverText"></p>
+    <div id="roundScoreList" style="text-align:left; font-size:13px; margin-bottom:16px;"></div>
+    <div class="actions">
+      <button class="primary" id="btnNextRound">Ronde Berikutnya</button>
+      <button id="btnBackToMenu">Menu Utama</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1/dist/peerjs.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
