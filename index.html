@@ -1,138 +1,346 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Studio UNO</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0d17" />
+  <meta name="color-scheme" content="dark" />
+  <title>VinzHosting — Hub Unduh Media</title>
+  <meta name="description" content="Satu tempat untuk cari & unduh dari Pinterest, TikTok, Spotify, dan YouTube." />
+
+  <!-- ============================================================
+       FONTS
+       Display : Sora        -> judul, angka, elemen besar
+       Body    : Plus Jakarta Sans -> paragraf, label, tombol
+       Mono    : JetBrains Mono    -> tag format (MP4 / MP3 / HD), status
+  ============================================================ -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Stylesheet utama (Liquid Glass theme, dibuat di tahap berikutnya) -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Studio UNO</h1>
-    <p>Kartu full SVG &middot; Lawan bot, main bareng lokal, atau online sampai 8 pemain</p>
-  </header>
 
-  <div class="layout">
-    <div class="table-col">
-      <div class="conn-banner" id="connBanner"><span class="spinner sm"></span><span id="connBannerText">Menyambungkan ulang...</span></div>
-      <div id="opponentsRow"></div>
-      <div id="pileArea"></div>
-      <div class="status-bar" id="statusBar"></div>
-      <div id="handWrap"></div>
-      <div class="actions" id="turnActions" style="width:100%; max-width:580px;">
-        <button id="btnDraw">Ambil Kartu</button>
-        <button id="btnPass">Lewat</button>
-        <button id="btnCombo" style="display:none;">🔗 Kombo</button>
-        <button class="primary" id="btnComboPlay" style="display:none;">Mainkan Kombo</button>
-        <button id="btnComboCancel" style="display:none;">Batal</button>
-      </div>
-      <div class="actions exit-row" id="exitRow" style="width:100%; max-width:580px; margin-top:2px;">
-        <button class="danger" id="btnExitGame">Keluar Room</button>
-      </div>
-    </div>
+  <!-- ============================================================
+       LAPISAN LATAR BELAKANG
+       - bg-mesh   : gradient blob hijau/biru/kuning/merah yang bergerak pudar
+       - bg-grid   : overlay jaring kotak tipis di atas gradient
+       Semua elemen di sini dekoratif -> aria-hidden.
+  ============================================================ -->
+  <div class="bg-mesh" aria-hidden="true">
+    <span class="blob blob--green"></span>
+    <span class="blob blob--blue"></span>
+    <span class="blob blob--yellow"></span>
+    <span class="blob blob--red"></span>
+  </div>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-noise" aria-hidden="true"></div>
 
-    <div class="panel">
-      <div class="card" id="setupCard">
-        <h2>Mode</h2>
-        <div class="seg" id="modeSeg">
-          <button data-val="offline" class="active">Offline</button>
-          <button data-val="online">Online</button>
+  <div class="app-shell">
+
+    <!-- ============================================================
+         HEADER
+    ============================================================ -->
+    <header class="site-header glass-panel">
+      <div class="brand">
+        <span class="brand-mark" data-icon="mark" aria-hidden="true"></span>
+        <span class="brand-name">
+          <span class="brand-name-vinz">Vinz</span
+          ><span class="brand-name-hosting">Hosting</span>
+        </span>
+      </div>
+
+      <nav class="site-nav" aria-label="Navigasi utama">
+        <a href="#platforms" class="nav-link">Platform</a>
+        <a href="#langganan" class="nav-link">Langganan</a>
+        <a href="#cara-pakai" class="nav-link">Cara Pakai</a>
+        <a href="#tentang" class="nav-link">Tentang</a>
+      </nav>
+
+      <button class="btn-icon" id="menuToggle" aria-label="Buka menu" aria-expanded="false">
+        <span data-icon="menu" aria-hidden="true"></span>
+      </button>
+    </header>
+
+    <main id="main-content">
+
+      <!-- ============================================================
+           HERO
+      ============================================================ -->
+      <section class="hero">
+        <p class="hero-eyebrow">Cari &amp; Unduh</p>
+        <h1 class="hero-title">
+          Semua platform favoritmu,
+          <span class="hero-title-accent">satu genggaman.</span>
+        </h1>
+        <p class="hero-subtitle">
+          Satu ketuk ke Pinterest, TikTok, Instagram, SnackVideo, RedNote, Spotify,
+          sampai YouTube — tanpa ganti-ganti aplikasi.
+        </p>
+      </section>
+
+      <!-- ============================================================
+           SEKILAS FITUR
+      ============================================================ -->
+      <section class="feature-strip" aria-label="Keunggulan">
+        <div class="feature-item glass-panel">
+          <span class="feature-icon" data-icon="bolt" aria-hidden="true"></span>
+          <p class="feature-text">Proses cepat, tanpa halaman iklan berlapis.</p>
+        </div>
+        <div class="feature-item glass-panel">
+          <span class="feature-icon" data-icon="shield" aria-hidden="true"></span>
+          <p class="feature-text">Link langsung ke sumber, tanpa data disimpan.</p>
+        </div>
+        <div class="feature-item glass-panel">
+          <span class="feature-icon" data-icon="layers" aria-hidden="true"></span>
+          <p class="feature-text">Beberapa platform, satu antarmuka yang sama.</p>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           GRID PLATFORM
+           Semua kartu = kotak persegi tumpul. Klik -> buka modal alat
+           unduh (form + hasil, diisi script.js pakai VinzKey.js).
+           Khusus Spotify, klik dulu membuka pilihan: Link Download
+           atau Search, baru modal alatnya.
+      ============================================================ -->
+      <section class="platform-grid" id="platforms">
+
+        <button
+          type="button"
+          class="platform-card glass-panel"
+          data-platform="pinterest"
+          data-action="open-tool"
+          data-tool="pinterest"
+        >
+          <span class="tile-corner" data-icon="download" aria-hidden="true"></span>
+          <span class="platform-icon" data-icon="pinterest" aria-hidden="true"></span>
+          <span class="platform-name">Pinterest</span>
+        </button>
+
+        <button
+          type="button"
+          class="platform-card glass-panel"
+          data-platform="tiktok"
+          data-action="open-tool"
+          data-tool="tiktok"
+        >
+          <span class="tile-corner" data-icon="download" aria-hidden="true"></span>
+          <span class="platform-icon" data-icon="tiktok" aria-hidden="true"></span>
+          <span class="platform-name">TikTok</span>
+        </button>
+
+        <button
+          type="button"
+          class="platform-card glass-panel"
+          data-platform="instagram"
+          data-action="open-tool"
+          data-tool="instagram"
+        >
+          <span class="tile-corner" data-icon="download" aria-hidden="true"></span>
+          <span class="platform-icon" data-icon="instagram" aria-hidden="true"></span>
+          <span class="platform-name">Instagram</span>
+        </button>
+
+        <button
+          type="button"
+          class="platform-card glass-panel"
+          data-platform="snackvideo"
+          data-action="open-tool"
+          data-tool="snackvideo"
+        >
+          <span class="tile-corner" data-icon="download" aria-hidden="true"></span>
+          <span class="platform-icon" data-icon="snackvideo" aria-hidden="true"></span>
+          <span class="platform-name">SnackVideo</span>
+        </button>
+
+        <button
+          type="button"
+          class="platform-card glass-panel"
+          data-platform="rednote"
+          data-action="open-tool"
+          data-tool="rednote"
+        >
+          <span class="tile-corner" data-icon="download" aria-hidden="true"></span>
+          <span class="platform-icon" data-icon="rednote" aria-hidden="true"></span>
+          <span class="platform-name">RedNote</span>
+        </button>
+
+        <!-- Spotify: klik dulu membuka popover kecil berisi 2 pilihan,
+             masing-masing membuka modal alat yang sesuai -->
+        <div class="platform-tile-wrap">
+          <button
+            type="button"
+            id="spotifyTileBtn"
+            class="platform-card glass-panel"
+            data-platform="spotify"
+            data-action="spotify-choice"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <span class="tile-corner" data-icon="chevron-down" aria-hidden="true"></span>
+            <span class="platform-icon" data-icon="spotify" aria-hidden="true"></span>
+            <span class="platform-name">Spotify</span>
+          </button>
+
+          <div class="spotify-popover glass-panel" data-popover="spotify" hidden>
+            <button type="button" class="spotify-popover-link" data-action="open-tool" data-tool="spotifyDownload">
+              <span data-icon="download" aria-hidden="true"></span>
+              Link Download
+            </button>
+            <button type="button" class="spotify-popover-link" data-action="open-tool" data-tool="spotifySearch">
+              <span data-icon="search" aria-hidden="true"></span>
+              Search
+            </button>
+          </div>
         </div>
 
-        <div id="offlineSetup" class="row-gap">
-          <h2 style="margin-top:12px;">Jumlah Pemain</h2>
-          <div class="seg" id="countSeg">
-            <button data-val="2">2</button><button data-val="3">3</button><button data-val="4" class="active">4</button>
-            <button data-val="5">5</button><button data-val="6">6</button><button data-val="7">7</button><button data-val="8">8</button>
-          </div>
-          <div id="offlineSeatList" class="row-gap"></div>
-          <div class="actions row-gap"><button class="primary" id="btnStartOffline">Mulai Permainan</button></div>
+        <button
+          type="button"
+          class="platform-card glass-panel"
+          data-platform="youtube"
+          data-action="open-tool"
+          data-tool="youtube"
+        >
+          <span class="tile-corner" data-icon="download" aria-hidden="true"></span>
+          <span class="platform-icon" data-icon="youtube" aria-hidden="true"></span>
+          <span class="platform-name">YouTube</span>
+        </button>
+
+      </section>
+
+      <!-- ============================================================
+           LANGGANAN
+           Dua paket: Pelajar (Rp4.000) & Pro (Rp10.000). Semua ikon
+           di sini SVG murni lewat ICONS di script.js.
+      ============================================================ -->
+      <section class="pricing" id="langganan">
+        <h2 class="section-title">Langganan</h2>
+        <p class="section-subtitle">Pilih paket yang sesuai kebutuhanmu.</p>
+
+        <div class="pricing-grid">
+          <article class="pricing-card glass-panel" data-plan="pelajar">
+            <span class="pricing-badge" data-icon="graduation-cap" aria-hidden="true"></span>
+            <h3 class="pricing-name">Pelajar</h3>
+            <p class="pricing-price">
+              <span class="pricing-amount">Rp4.000</span>
+              <span class="pricing-period">/bulan</span>
+            </p>
+            <ul class="pricing-features">
+              <li><span data-icon="check" aria-hidden="true"></span> Unduh tanpa batas</li>
+              <li><span data-icon="check" aria-hidden="true"></span> Tanpa iklan</li>
+              <li><span data-icon="check" aria-hidden="true"></span> Kecepatan standar</li>
+            </ul>
+            <button
+              type="button"
+              class="btn-glass btn-glass--full"
+              data-action="open-link"
+              data-link-key="subscribePelajar"
+            >
+              Pilih Paket
+            </button>
+          </article>
+
+          <article class="pricing-card pricing-card--pro glass-panel" data-plan="pro">
+            <span class="pricing-tag">Populer</span>
+            <span class="pricing-badge" data-icon="sparkles" aria-hidden="true"></span>
+            <h3 class="pricing-name">Pro</h3>
+            <p class="pricing-price">
+              <span class="pricing-amount">Rp10.000</span>
+              <span class="pricing-period">/bulan</span>
+            </p>
+            <ul class="pricing-features">
+              <li><span data-icon="check" aria-hidden="true"></span> Semua fitur Pelajar</li>
+              <li><span data-icon="check" aria-hidden="true"></span> Kecepatan prioritas</li>
+              <li><span data-icon="check" aria-hidden="true"></span> Dukungan prioritas</li>
+            </ul>
+            <button
+              type="button"
+              class="btn-glass btn-glass--full"
+              data-action="open-link"
+              data-link-key="subscribePro"
+            >
+              Pilih Paket
+            </button>
+          </article>
         </div>
+      </section>
 
-        <div id="onlineSetup" class="row-gap" style="display:none;">
-          <div id="onlineEntry">
-            <input id="playerNameInput" class="field-input" type="text" maxlength="14" placeholder="Nama kamu (opsional)" style="margin-bottom:8px;" autocomplete="off">
-            <h2 style="margin-top:6px;">Jumlah Pemain (jika buat room)</h2>
-            <div class="seg" id="hostCountSeg">
-              <button data-val="2">2</button><button data-val="3">3</button><button data-val="4" class="active">4</button>
-              <button data-val="5">5</button><button data-val="6">6</button><button data-val="7">7</button><button data-val="8">8</button>
-            </div>
-            <div class="actions row-gap"><button class="primary" id="btnCreateRoom">Buat Room Baru</button></div>
-            <div style="display:flex; gap:6px; margin-top:8px;">
-              <input id="joinCodeInput" class="field-input" type="text" maxlength="6" placeholder="KODE ROOM" style="text-transform:uppercase; letter-spacing:0.1em;">
-              <button id="btnJoinRoom" style="background:var(--panel-2); border:1px solid var(--border); color:var(--text); padding:9px 14px; border-radius:7px; font-weight:600; font-size:13.5px; cursor:pointer;">Gabung</button>
-            </div>
-            <div class="onlineBusyLine" id="onlineBusyLine"><span class="spinner sm"></span><span>Menghubungkan...</span></div>
-            <div id="onlineError"></div>
-          </div>
+      <!-- ============================================================
+           CARA PAKAI
+      ============================================================ -->
+      <section class="how-it-works glass-panel" id="cara-pakai">
+        <h2 class="section-title">Cara pakai</h2>
+        <ol class="steps-list">
+          <li>
+            <span class="step-index">1</span>
+            <p>Pilih kotak platform yang kamu mau — Pinterest, TikTok, Instagram, dan lainnya.</p>
+          </li>
+          <li>
+            <span class="step-index">2</span>
+            <p>Kamu langsung diarahkan ke halaman unduhnya. Khusus Spotify, pilih dulu Link Download atau Search.</p>
+          </li>
+          <li>
+            <span class="step-index">3</span>
+            <p>Butuh lebih banyak? Lihat paket Langganan di atas.</p>
+          </li>
+        </ol>
+      </section>
 
-          <div id="onlineLobby" style="display:none;">
-            <div class="room-code-box">
-              <div class="cap">Kode Room</div>
-              <div class="room-code-display" id="roomCodeDisplay">-----</div>
-              <div class="checkline" id="roomCodeWait" style="display:none; justify-content:center;"><span class="spinner sm"></span><span>Membuat room...</span></div>
-              <button class="copy-btn" id="btnCopyCode">Salin Kode</button>
-            </div>
-            <div id="rosterList" class="row-gap"></div>
-            <div class="actions row-gap" id="hostStartWrap" style="display:none;">
-              <button class="primary" id="btnStartOnline">Mulai Game</button>
-            </div>
-            <div id="guestWaitMsg" class="checkline" style="display:none; justify-content:center;"><span class="spinner sm"></span><span>Menunggu host memulai game...</span></div>
-            <div class="actions row-gap"><button class="danger" id="btnLeaveRoom">Keluar Room</button></div>
-          </div>
-        </div>
+      <!-- ============================================================
+           TENTANG
+      ============================================================ -->
+      <section class="about glass-panel" id="tentang">
+        <h2 class="section-title">Tentang MediaVault</h2>
+        <p>
+          MediaVault menggabungkan beberapa layanan pencarian &amp; unduh media favoritmu
+          dalam satu antarmuka yang ringan dan cepat.
+        </p>
+      </section>
+
+    </main>
+
+    <!-- ============================================================
+         FOOTER
+    ============================================================ -->
+    <footer class="site-footer">
+      <p>&copy; <span id="year"></span> VinzHosting. Dibuat oleh Alvin.</p>
+    </footer>
+  </div>
+
+  <!-- ============================================================
+       WADAH NOTIFIKASI (toast) untuk pesan error / sukses dari script.js
+  ============================================================ -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- ============================================================
+       MODAL ALAT UNDUH
+       Satu shell dipakai bergantian untuk semua platform (Pinterest,
+       TikTok, Instagram, SnackVideo, YouTube, Spotify, RedNote) —
+       isinya (form + hasil) disuntik oleh script.js sesuai platform
+       yang diklik.
+  ============================================================ -->
+  <div class="modal-overlay" id="toolModal" aria-hidden="true">
+    <div class="modal glass-panel" role="dialog" aria-modal="true" aria-labelledby="toolModalTitle">
+      <div class="modal-header">
+        <h3 class="modal-title" id="toolModalTitle"></h3>
+        <button type="button" class="modal-close" id="toolModalClose" aria-label="Tutup">
+          <span data-icon="close" aria-hidden="true"></span>
+        </button>
       </div>
-
-      <div class="card" id="scoreCard" style="display:none;">
-        <h2>Skor</h2>
-        <div id="scoreList"></div>
-      </div>
-
-      <div class="card" id="logCard" style="display:none;">
-        <h2>Kejadian</h2>
-        <div id="eventLog"></div>
-      </div>
+      <div class="modal-body" id="toolModalBody"></div>
     </div>
   </div>
-</div>
 
-<button class="uno-toast-btn" id="btnCallUno">UNO!</button>
-<div class="turn-toast" id="turnToast"></div>
-
-<div class="modal-overlay" id="passOverlay">
-  <div class="promo-box">
-    <div class="pass-avatar" id="passOverlayAvatar"></div>
-    <p id="passOverlayTitle">Giliran Pemain</p>
-    <div id="passOverlaySub" style="color:var(--text-muted); font-size:13px; margin-top:-8px; margin-bottom:16px;">Berikan perangkat ke pemain ini, lalu tekan tombol di bawah.</div>
-    <div class="actions">
-      <button class="primary" id="btnPassReady">Siap, Lihat Kartu</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="colorOverlay">
-  <div class="promo-box">
-    <p>Pilih warna</p>
-    <div class="color-choices" id="colorChoices"></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="roundOverOverlay">
-  <div class="promo-box">
-    <p id="roundOverText"></p>
-    <div id="roundScoreList" style="text-align:left; font-size:13px; margin-bottom:16px;"></div>
-    <div class="actions">
-      <button class="primary" id="btnNextRound">Ronde Berikutnya</button>
-      <button id="btnBackToMenu">Menu Utama</button>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1/dist/peerjs.min.js"></script>
-<script src="script.js"></script>
+  <!-- Konfigurasi gateway/API key ada di VinzKey.js — wajib dimuat
+       sebelum script.js -->
+  <script src="VinzKey.js" defer></script>
+  <!-- Ikon SVG murni & seluruh interaksi ada di script.js -->
+  <script src="script.js" defer></script>
 </body>
 </html>
